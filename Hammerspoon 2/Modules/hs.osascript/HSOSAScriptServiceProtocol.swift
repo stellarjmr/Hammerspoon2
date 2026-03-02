@@ -2,9 +2,7 @@
 //  HSOSAScriptServiceProtocol.swift
 //  Hammerspoon 2
 //
-//  NOTE: This file is intentionally duplicated in HammerspoonOSAScriptHelper/.
-//  XPC requires the protocol to be compiled into each target separately —
-//  no shared framework is used.
+//  NOTE: This file is linked into both Hammerspoon 2 and its OSAScript XPC helper
 //
 
 import Foundation

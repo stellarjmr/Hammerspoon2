@@ -13,7 +13,7 @@ import OSAKit
 ///
 /// `OSAScript` requires the **main thread**; every call is therefore dispatched
 /// to `DispatchQueue.main` before any OSA work is done.
-class OSAScriptXPCService: NSObject, HSOSAScriptServiceProtocol {
+class HSOSAScriptXPCService: NSObject, HSOSAScriptServiceProtocol {
 
     func execute(source: String,
                  language languageName: String,
@@ -30,7 +30,7 @@ class OSAScriptXPCService: NSObject, HSOSAScriptServiceProtocol {
                            languageName: String,
                            reply: @escaping (Bool, String?, String?) -> Void) {
         // 1. Look up the OSA language.
-        guard let language = OSALanguage.find(withName: languageName) else {
+        guard let language = OSALanguage(forName: languageName) else {
             reply(false, nil, "OSA language not found: \(languageName)")
             return
         }
