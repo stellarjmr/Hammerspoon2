@@ -61,11 +61,15 @@ class HSOSAScriptXPCService: NSObject, HSOSAScriptServiceProtocol {
             let jsonString = String(data: jsonData, encoding: .utf8)
             reply(true, jsonString, rawString)
         } catch {
-            // Serialisation failed (unexpected); fall back to the raw string.
-            let escaped = rawString
-                .replacingOccurrences(of: "\\", with: "\\\\")
-                .replacingOccurrences(of: "\"", with: "\\\"")
-            reply(true, "\"\(escaped)\"", rawString)
+            // Serialisation failed (unexpected); fall back to JSON-encoded raw string.
+            if let fallbackData = try? JSONSerialization.data(
+                withJSONObject: rawString, options: [.fragmentsAllowed]),
+               let fallbackString = String(data: fallbackData, encoding: .utf8) {
+                reply(true, fallbackString, rawString)
+            } else {
+                // Extremely unlikely: as a last resort, return an empty JSON string.
+                reply(true, "\"\"", rawString)
+            }
         }
     }
 
