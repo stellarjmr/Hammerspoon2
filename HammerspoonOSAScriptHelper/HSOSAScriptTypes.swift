@@ -1,5 +1,5 @@
 //
-//  HSOSAScriptLanguage.swift
+//  HSOSAScriptTypes.swift
 //  Hammerspoon 2
 //
 //  Created by Chris Jones on 03/03/2026.
