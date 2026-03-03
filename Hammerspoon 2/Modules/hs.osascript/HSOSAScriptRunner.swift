@@ -47,7 +47,7 @@ class HSOSAScriptRunner {
                     switch result {
                     case let .success(result):
                         if let response = try? result.decode(as: HSOSAResponse.self) {
-                            success = true
+                            success = response.success
                             resultJSON = response.jsonMessage
                             raw = response.rawMessage
                         } else {
