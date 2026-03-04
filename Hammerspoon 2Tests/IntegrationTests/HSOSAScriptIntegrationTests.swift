@@ -43,6 +43,11 @@ import JavaScriptCore
         harness.expectTrue("typeof hs.osascript.applescriptFromFile === 'function'")
         harness.expectTrue("typeof hs.osascript.javascriptFromFile === 'function'")
         harness.expectTrue("typeof hs.osascript._execute === 'function'")
+        harness.expectTrue("typeof hs.osascript.applescriptSync === 'function'")
+        harness.expectTrue("typeof hs.osascript.javascriptSync === 'function'")
+        harness.expectTrue("typeof hs.osascript.applescriptSyncFromFile === 'function'")
+        harness.expectTrue("typeof hs.osascript.javascriptSyncFromFile === 'function'")
+        harness.expectTrue("typeof hs.osascript._executeSync === 'function'")
     }
 
     // MARK: - Promise Return Type Tests
@@ -647,6 +652,143 @@ import JavaScriptCore
         harness.expectTrue("secondResult.success === true")
         harness.expectEqual("secondResult.result", 99)
     }
+
+    // MARK: - Synchronous API Tests
+
+    @Test("applescriptSync() returns a result object synchronously")
+    func testAppleScriptSyncReturnsObject() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.applescriptSync('return \"sync hello\"');")
+        harness.expectTrue("r !== null && r !== undefined")
+        harness.expectTrue("'success' in r && 'result' in r && 'raw' in r")
+        harness.expectTrue("r.success === true")
+        harness.expectEqual("r.result", "sync hello")
+        harness.expectEqual("r.raw", "sync hello")
+    }
+
+    @Test("javascriptSync() returns a result object synchronously")
+    func testJavaScriptSyncReturnsObject() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.javascriptSync('6 * 7');")
+        harness.expectTrue("r.success === true")
+        harness.expectEqual("r.result", 42)
+    }
+
+    @Test("applescriptSync() maps types correctly")
+    func testAppleScriptSyncTypeMapping() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var rStr = hs.osascript.applescriptSync('return \"hello\"');")
+        harness.expectEqual("rStr.result", "hello")
+
+        harness.eval("var rNum = hs.osascript.applescriptSync('return 99');")
+        harness.expectEqual("rNum.result", 99)
+
+        harness.eval("var rBool = hs.osascript.applescriptSync('return true');")
+        harness.expectTrue("rBool.result === true")
+
+        harness.eval("var rNull = hs.osascript.applescriptSync('return missing value');")
+        harness.expectTrue("rNull.result === null")
+    }
+
+    @Test("applescriptSync() returns success=false on script error")
+    func testAppleScriptSyncError() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.applescriptSync('this is not valid @@@');")
+        harness.expectTrue("r.success === false")
+        harness.expectTrue("r.result === null")
+        harness.expectTrue("r.raw.length > 0")
+    }
+
+    @Test("javascriptSync() returns success=false on script error")
+    func testJavaScriptSyncError() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.javascriptSync('throw new Error(\"sync error\")');")
+        harness.expectTrue("r.success === false")
+        harness.expectTrue("r.result === null")
+        harness.expectTrue("r.raw.length > 0")
+    }
+
+    @Test("applescriptSyncFromFile() executes a valid script file")
+    func testAppleScriptSyncFromFile() {
+        let tmpPath = NSTemporaryDirectory() + "hs_osa_sync_test_\(UUID().uuidString).applescript"
+        try? "return \"sync from file\"".write(toFile: tmpPath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: tmpPath) }
+
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.applescriptSyncFromFile('\(tmpPath)');")
+        harness.expectTrue("r.success === true")
+        harness.expectEqual("r.result", "sync from file")
+    }
+
+    @Test("applescriptSyncFromFile() returns success=false for non-existent file")
+    func testAppleScriptSyncFromFileMissing() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.applescriptSyncFromFile('/nonexistent/sync.applescript');")
+        harness.expectTrue("r.success === false")
+        harness.expectTrue("r.result === null")
+        harness.expectTrue("r.raw.indexOf('Failed to read file:') !== -1")
+    }
+
+    @Test("javascriptSyncFromFile() executes a valid script file")
+    func testJavaScriptSyncFromFile() {
+        let tmpPath = NSTemporaryDirectory() + "hs_osa_sync_test_\(UUID().uuidString).js"
+        try? "3 + 3".write(toFile: tmpPath, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(atPath: tmpPath) }
+
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.javascriptSyncFromFile('\(tmpPath)');")
+        harness.expectTrue("r.success === true")
+        harness.expectEqual("r.result", 6)
+    }
+
+    @Test("javascriptSyncFromFile() returns success=false for non-existent file")
+    func testJavaScriptSyncFromFileMissing() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript.javascriptSyncFromFile('/nonexistent/sync.js');")
+        harness.expectTrue("r.success === false")
+        harness.expectTrue("r.result === null")
+        harness.expectTrue("r.raw.indexOf('Failed to read file:') !== -1")
+    }
+
+    @Test("_executeSync() with 'AppleScript' language behaves like applescriptSync()")
+    func testExecuteSyncAppleScript() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript._executeSync('return \"via executeSync\"', 'AppleScript');")
+        harness.expectTrue("r.success === true")
+        harness.expectEqual("r.result", "via executeSync")
+    }
+
+    @Test("_executeSync() with 'JavaScript' language behaves like javascriptSync()")
+    func testExecuteSyncJavaScript() {
+        let harness = JSTestHarness()
+        harness.loadModule(HSOSAScriptModule.self, as: "osascript")
+
+        harness.eval("var r = hs.osascript._executeSync('5 * 5', 'JavaScript');")
+        harness.expectTrue("r.success === true")
+        harness.expectEqual("r.result", 25)
+    }
+
+    // MARK: - Real-World Use Case Tests (Concurrent)
 
     @Test("Multiple concurrent calls all resolve")
     func testConcurrentCalls() async {

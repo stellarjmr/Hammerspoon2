@@ -75,13 +75,6 @@
 			);
 			target = 4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */;
 		};
-		4F947DA92F56448C00DD814E /* Exceptions for "Hammerspoon 2" folder in "HammerspoonOSAScriptHelper" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Modules/hs.osascript/HSOSAScriptServiceProtocol.swift,
-			);
-			target = 4F947D862F563FCF00DD814E /* HammerspoonOSAScriptHelper */;
-		};
 		4F947DAD2F5703D300DD814E /* Exceptions for "HammerspoonOSAScriptHelper" folder in "Hammerspoon 2" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -94,9 +87,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4F5641852E8333830099EB4C /* Hammerspoon 2 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				4F947DA92F56448C00DD814E /* Exceptions for "Hammerspoon 2" folder in "HammerspoonOSAScriptHelper" target */,
-			);
 			path = "Hammerspoon 2";
 			sourceTree = "<group>";
 		};

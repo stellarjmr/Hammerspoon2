@@ -10,15 +10,14 @@ import JavaScriptCore
 
 /// Run AppleScript and OSA JavaScript from Hammerspoon scripts.
 ///
-/// **WARNING**: hs.osascript is UNSAFE to use on 
 /// Script execution is isolated in a separate XPC helper process
 /// (`HammerspoonOSAScriptHelper`). If a script crashes or deadlocks, only the
 /// helper is affected — the main app remains stable and the next call
 /// reconnects automatically.
 ///
-/// ## Return value
+/// ## Async API (Promise-based)
 ///
-/// Every function returns a `Promise` that **always resolves** (never rejects)
+/// Every async function returns a `Promise` that **always resolves** (never rejects)
 /// with an object containing three fields:
 ///
 /// | Field | Type | Description |
@@ -27,6 +26,12 @@ import JavaScriptCore
 /// | `result` | `any` | Parsed return value of the script, or `null` on failure |
 /// | `raw` | `String` | Raw string representation of the result, or the error message on failure |
 ///
+/// ## Sync API
+///
+/// The `*Sync` variants block until the script completes and return the same
+/// `{ success, result, raw }` object directly.  Use these only when a Promise
+/// chain is impractical; they block the JS thread for the duration of the call.
+///
 /// The `result` field is typed based on what the script returned: strings,
 /// numbers, booleans, lists, and records are all mapped to their JavaScript
 /// equivalents. `null` is used for AppleScript's `missing value` and for any
@@ -34,16 +39,16 @@ import JavaScriptCore
 ///
 /// ## Examples
 ///
-/// **Return a string:**
+/// **Return a string (async):**
 /// ```javascript
 /// hs.osascript.applescript('return "hello"')
 ///   .then(r => console.log(r.result));  // "hello"
 /// ```
 ///
-/// **Return a number:**
+/// **Return a string (sync):**
 /// ```javascript
-/// hs.osascript.applescript('return 42')
-///   .then(r => console.log(r.result));  // 42
+/// const r = hs.osascript.applescriptSync('return "hello"');
+/// console.log(r.result);  // "hello"
 /// ```
 ///
 /// **Interact with an application:**
@@ -117,6 +122,46 @@ import JavaScriptCore
     ///   - language: The OSA language name — must be `"AppleScript"` or `"JavaScript"`.
     /// - Returns: A `Promise` resolving to `{ success, result, raw }`.
     @objc func _execute(_ source: String, _ language: String) -> JSPromise?
+
+    // MARK: - Synchronous API
+
+    /// Run an AppleScript source string synchronously.
+    ///
+    /// Blocks the JS thread until the script completes.
+    ///
+    /// - Parameter source: The AppleScript source code to compile and execute.
+    /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
+    @objc func applescriptSync(_ source: String) -> [String: Any]?
+
+    /// Run an OSA JavaScript source string synchronously.
+    ///
+    /// Blocks the JS thread until the script completes.
+    ///
+    /// - Parameter source: The OSA JavaScript source code to compile and execute.
+    /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
+    @objc func javascriptSync(_ source: String) -> [String: Any]?
+
+    /// Read a file from disk and execute its contents as AppleScript synchronously.
+    ///
+    /// - Parameter path: Absolute path to the AppleScript source file.
+    /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
+    @objc func applescriptSyncFromFile(_ path: String) -> [String: Any]?
+
+    /// Read a file from disk and execute its contents as OSA JavaScript synchronously.
+    ///
+    /// - Parameter path: Absolute path to the OSA JavaScript source file.
+    /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
+    @objc func javascriptSyncFromFile(_ path: String) -> [String: Any]?
+
+    /// Low-level synchronous execution entry point.
+    ///
+    /// Prefer `applescriptSync()` or `javascriptSync()` over calling this directly.
+    ///
+    /// - Parameters:
+    ///   - source: The script source code.
+    ///   - language: The OSA language name — must be `"AppleScript"` or `"JavaScript"`.
+    /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
+    @objc func _executeSync(_ source: String, _ language: String) -> [String: Any]?
 }
 
 // MARK: - Implementation
@@ -192,6 +237,48 @@ import JavaScriptCore
                 }
                 holder.resolveWith(resultDict)
             }
+        }
+    }
+
+    // MARK: - Synchronous Public API
+
+    @objc func applescriptSync(_ source: String) -> [String: Any]? {
+        return _executeSync(source, "AppleScript")
+    }
+
+    @objc func javascriptSync(_ source: String) -> [String: Any]? {
+        return _executeSync(source, "JavaScript")
+    }
+
+    @objc func applescriptSyncFromFile(_ path: String) -> [String: Any]? {
+        guard let source = try? String(contentsOfFile: path, encoding: .utf8) else {
+            return ["success": false, "result": NSNull(), "raw": "Failed to read file: \(path)"]
+        }
+        return _executeSync(source, "AppleScript")
+    }
+
+    @objc func javascriptSyncFromFile(_ path: String) -> [String: Any]? {
+        guard let source = try? String(contentsOfFile: path, encoding: .utf8) else {
+            return ["success": false, "result": NSNull(), "raw": "Failed to read file: \(path)"]
+        }
+        return _executeSync(source, "JavaScript")
+    }
+
+    @objc func _executeSync(_ source: String, _ language: String) -> [String: Any]? {
+        do {
+            let (success, resultJSON, raw) = try runner.runSync(source: source, language: language)
+            if success {
+                let parsed = Self.parseJSON(resultJSON)
+                return ["success": true, "result": parsed, "raw": raw]
+            } else {
+                return ["success": false, "result": NSNull(), "raw": raw]
+            }
+        } catch {
+            return [
+                "success": false,
+                "result": NSNull(),
+                "raw": "XPC error: \(error.localizedDescription)"
+            ]
         }
     }
 
