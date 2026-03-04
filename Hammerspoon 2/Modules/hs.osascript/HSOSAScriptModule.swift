@@ -131,7 +131,7 @@ import JavaScriptCore
     ///
     /// - Parameter source: The AppleScript source code to compile and execute.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
-    @objc func applescriptSync(_ source: String) -> NSDictionary?
+    @objc func applescriptSync(_ source: String) -> [String: Any]?
 
     /// Run an OSA JavaScript source string synchronously.
     ///
@@ -139,19 +139,19 @@ import JavaScriptCore
     ///
     /// - Parameter source: The OSA JavaScript source code to compile and execute.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
-    @objc func javascriptSync(_ source: String) -> NSDictionary?
+    @objc func javascriptSync(_ source: String) -> [String: Any]?
 
     /// Read a file from disk and execute its contents as AppleScript synchronously.
     ///
     /// - Parameter path: Absolute path to the AppleScript source file.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
-    @objc func applescriptSyncFromFile(_ path: String) -> NSDictionary?
+    @objc func applescriptSyncFromFile(_ path: String) -> [String: Any]?
 
     /// Read a file from disk and execute its contents as OSA JavaScript synchronously.
     ///
     /// - Parameter path: Absolute path to the OSA JavaScript source file.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
-    @objc func javascriptSyncFromFile(_ path: String) -> NSDictionary?
+    @objc func javascriptSyncFromFile(_ path: String) -> [String: Any]?
 
     /// Low-level synchronous execution entry point.
     ///
@@ -161,7 +161,7 @@ import JavaScriptCore
     ///   - source: The script source code.
     ///   - language: The OSA language name — must be `"AppleScript"` or `"JavaScript"`.
     /// - Returns: An object `{ success, result, raw }`, or `null` on XPC failure.
-    @objc func _executeSync(_ source: String, _ language: String) -> NSDictionary?
+    @objc func _executeSync(_ source: String, _ language: String) -> [String: Any]?
 }
 
 // MARK: - Implementation
@@ -242,29 +242,29 @@ import JavaScriptCore
 
     // MARK: - Synchronous Public API
 
-    @objc func applescriptSync(_ source: String) -> NSDictionary? {
+    @objc func applescriptSync(_ source: String) -> [String: Any]? {
         return _executeSync(source, "AppleScript")
     }
 
-    @objc func javascriptSync(_ source: String) -> NSDictionary? {
+    @objc func javascriptSync(_ source: String) -> [String: Any]? {
         return _executeSync(source, "JavaScript")
     }
 
-    @objc func applescriptSyncFromFile(_ path: String) -> NSDictionary? {
+    @objc func applescriptSyncFromFile(_ path: String) -> [String: Any]? {
         guard let source = try? String(contentsOfFile: path, encoding: .utf8) else {
             return ["success": false, "result": NSNull(), "raw": "Failed to read file: \(path)"]
         }
         return _executeSync(source, "AppleScript")
     }
 
-    @objc func javascriptSyncFromFile(_ path: String) -> NSDictionary? {
+    @objc func javascriptSyncFromFile(_ path: String) -> [String: Any]? {
         guard let source = try? String(contentsOfFile: path, encoding: .utf8) else {
             return ["success": false, "result": NSNull(), "raw": "Failed to read file: \(path)"]
         }
         return _executeSync(source, "JavaScript")
     }
 
-    @objc func _executeSync(_ source: String, _ language: String) -> NSDictionary? {
+    @objc func _executeSync(_ source: String, _ language: String) -> [String: Any]? {
         do {
             let (success, resultJSON, raw) = try runner.runSync(source: source, language: language)
             if success {
