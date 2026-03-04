@@ -69,40 +69,41 @@ class HSOSAScriptRunner {
             }
         }
     }
-//    func run(source: String,
-//             language: String) async throws -> (success: Bool, resultJSON: String?, raw: String) {
-//        return try await withCheckedThrowingContinuation { continuation in
-//            let connection = NSXPCConnection(serviceName: serviceName)
-//            connection.remoteObjectInterface = NSXPCInterface(with: HSOSAScriptServiceProtocol.self)
-//            connection.resume()
-//
-//            // remoteObjectProxyWithErrorHandler fires if the connection dies before
-//            // a reply is received (e.g. helper crash, service not found).
-//            let proxy = connection.remoteObjectProxyWithErrorHandler { error in
-//                connection.invalidate()
-//                continuation.resume(throwing: error)
-//            } as? HSOSAScriptServiceProtocol
-//
-//            guard let proxy else {
-//                connection.invalidate()
-//                continuation.resume(throwing: NSError(
-//                    domain: "HSOSAScriptRunner",
-//                    code: -1,
-//                    userInfo: [NSLocalizedDescriptionKey: "Failed to obtain XPC service proxy"]
-//                ))
-//                return
-//            }
-//
-//            proxy.execute(source: source, language: language) { success, resultJSON, rawOrError in
-//                connection.invalidate()
-//                continuation.resume(returning: (
-//                    success: success,
-//                    resultJSON: resultJSON,
-//                    raw: rawOrError ?? ""
-//                ))
-//            }
-//        }
-//    }
+
+    /// Execute an OSA script in the helper process synchronously.
+    ///
+    /// Blocks the calling thread until the helper responds.  Use only when an
+    /// async context is not available; prefer `run(source:language:)` otherwise.
+    ///
+    /// - Parameters:
+    ///   - source: Script source code.
+    ///   - language: OSA language name (`"AppleScript"` or `"JavaScript"`).
+    /// - Returns: A tuple where:
+    ///   - `success` mirrors the helper's success flag.
+    ///   - `resultJSON` is a JSON string of the parsed result (nil on failure).
+    ///   - `raw` is `result.stringValue` on success, or the error message on failure.
+    /// - Throws: Only for XPC infrastructure failures (connection refused, helper crash, etc.).
+    ///   Script-level errors are returned as `(false, nil, message)`.
+    func runSync(source: String, language: String) throws -> (Bool, String?, String) {
+        let session = try XPCSession(xpcService: serviceName, options: .inactive)
+#if DEBUG
+        AKWarning("OSASCRIPT XPC SERVICE RUNNING WITHOUT PEER REQUIREMENTS. This is a serious security risk, do not use this build for production.")
+#else
+        AKTrace("Enforcing peer requirement for XPC connections.")
+        session.setPeerRequirement(.isFromSameTeam())
+#endif
+        try session.activate()
+        defer { session.cancel(reason: "OSAScriptRunner deinit") }
+
+        let message = HSOSARequest(language: language, source: source)
+        let received = try session.sendSync(message)
+
+        if let response = try? received.decode(as: HSOSAResponse.self) {
+            return (response.success, response.jsonMessage, response.rawMessage)
+        } else {
+            return (false, nil, "Unable to decode response")
+        }
+    }
 
     /// No-op: there is no persistent connection to tear down.
     func shutdown() {}
