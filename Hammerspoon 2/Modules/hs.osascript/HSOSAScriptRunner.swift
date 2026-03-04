@@ -93,7 +93,7 @@ class HSOSAScriptRunner {
         session.setPeerRequirement(.isFromSameTeam())
 #endif
         try session.activate()
-        defer { session.cancel(reason: "OSAScriptRunner deinit") }
+        defer { session.cancel(reason: "OSAScriptRunner.runSync completed") }
 
         let message = HSOSARequest(language: language, source: source)
         let received = try session.sendSync(message)
