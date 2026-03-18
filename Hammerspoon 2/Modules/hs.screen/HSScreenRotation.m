@@ -11,10 +11,14 @@
 @end
 
 BOOL HSScreenSetRotation(CGDirectDisplayID displayID, int degrees) {
-    NSBundle *bundle = [NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/MonitorPanel.framework"];
-    if (![bundle load]) return NO;
-
-    Class MPDisplayClass = NSClassFromString(@"MPDisplay");
+    static Class MPDisplayClass = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSBundle *bundle = [NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/MonitorPanel.framework"];
+        if ([bundle load]) {
+            MPDisplayClass = NSClassFromString(@"MPDisplay");
+        }
+    });
     if (!MPDisplayClass) return NO;
 
     MPDisplay *display = [[MPDisplayClass alloc] initWithCGSDisplayID:(int)displayID];
