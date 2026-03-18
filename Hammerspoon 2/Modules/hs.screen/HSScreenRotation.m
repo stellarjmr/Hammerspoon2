@@ -18,6 +18,8 @@ BOOL HSScreenSetRotation(CGDirectDisplayID displayID, int degrees) {
     if (!MPDisplayClass) return NO;
 
     MPDisplay *display = [[MPDisplayClass alloc] initWithCGSDisplayID:(int)displayID];
+    if (!display) return NO;
+
     display.orientation = degrees;
     return YES;
 }
