@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 @_documentation(visibility: private)
 struct ConsoleView: View {
@@ -15,9 +17,11 @@ struct ConsoleView: View {
     @State var evalHistory: [String] = []
     @State var evalIndex: Int = -1
 
-    @State var selectedRows = Set<HammerspoonLogEntry.ID>()
     @State var searchString: String = ""
     @State var searchPresented: Bool = false
+
+    @State var saveError: String?
+    @State var showSaveError: Bool = false
 
     @Environment(\.dismissWindow) var dismissWindow
 
@@ -30,7 +34,17 @@ struct ConsoleView: View {
         }
     }
 
-    func styleForLogType(_ logType: HammerspoonLogType) -> any ShapeStyle {
+    private func formatEntry(_ entry: HammerspoonLogEntry) -> String {
+        let date = entry.date.formatted(
+            .verbatim(
+                "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
+                locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
+            )
+        )
+        return "\(date) - \(entry.logType.asString): \(entry.msg)"
+    }
+
+    private func colorForLogType(_ logType: HammerspoonLogType) -> Color {
         switch logType {
         case .Error: return .red
         case .Warning: return .orange
@@ -52,7 +66,7 @@ struct ConsoleView: View {
         evalString = evalHistory[evalIndex]
         return .handled
     }
-    
+
     fileprivate func handleDownArrow() -> KeyPress.Result {
         switch (evalIndex) {
         case -1:
@@ -69,8 +83,11 @@ struct ConsoleView: View {
         evalString = evalHistory[evalIndex]
         return .handled
     }
-    
+
     fileprivate func handleSubmit() {
+        // Echo the command
+        AKInfo("> \(evalString)")
+
         evalHistory.append(evalString)
         evalIndex = -1
         if let result = JSEngine.shared.eval(evalString) {
@@ -85,32 +102,46 @@ struct ConsoleView: View {
         }
         evalString = ""
     }
-    
+
     var body: some View {
         VStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading) {
-                        ForEach(filteredEntries) { entry in
-                            let date = entry.date.formatted(
-                                .verbatim(
-                                    "\(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)",
-                                    locale: .autoupdatingCurrent, timeZone: .autoupdatingCurrent, calendar: .autoupdatingCurrent
-                                )
-                            )
-                            Text("\(date) - \(entry.logType.asString): \(entry.msg)")
-                                .id(entry.id)
-                                .multilineTextAlignment(.leading)
-                                .fontDesign(.monospaced)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    let filteredEntries = logs.entries.filter {
+                        if $0.logType.rawValue < minimumLogLevel.rawValue { return false }
+                        if searchString == "" {
+                            return true
+                        } else {
+                            return $0.msg.contains(searchString)
                         }
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
+
+                    let logText: AttributedString = {
+                        var result = AttributedString()
+                        for (index, entry) in filteredEntries.enumerated() {
+                            var part = AttributedString(formatEntry(entry))
+                            part.foregroundColor = colorForLogType(entry.logType)
+                            result.append(part)
+                            if index < filteredEntries.count - 1 {
+                                result.append(AttributedString("\n"))
+                            }
+                        }
+                        return result
+                    }()
+
+                    Text(logText)
+                        .multilineTextAlignment(.leading)
+                        .fontDesign(.monospaced)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+
+                    Color.clear
+                        .frame(height: 0)
+                        .id("logBottom")
                 }
                 .onChange(of: logs.entries) {
-                    proxy.scrollTo(logs.entries.last?.id)
+                    proxy.scrollTo("logBottom", anchor: .bottom)
                 }
             }
 
