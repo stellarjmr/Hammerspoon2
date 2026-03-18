@@ -196,7 +196,7 @@ private extension CGDisplayMode {
     }
 
     /// Height of the primary display in macOS points, used as the flip baseline.
-    private var primaryScreenHeight: CGFloat { NSScreen.screens[0].frame.height }
+    private var primaryScreenHeight: CGFloat { NSScreen.screens.first?.frame.height ?? 0}
 
     /// Converts a rect from macOS coordinates (origin bottom-left, y-up) to
     /// Hammerspoon coordinates (origin top-left of primary screen, y-down).

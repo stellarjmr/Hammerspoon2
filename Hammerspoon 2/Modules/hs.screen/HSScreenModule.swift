@@ -53,7 +53,8 @@ import JavaScriptCore
     @objc func main() -> HSScreen?
 
     /// The primary display — the one that contains the global menu bar.
-    @objc func primary() -> HSScreen
+    /// Returns `null` if no primary screen can be determined.
+    @objc func primary() -> HSScreen?
 }
 
 // MARK: - Implementation
@@ -76,8 +77,9 @@ import JavaScriptCore
         return HSScreen(screen: main)
     }
 
-    @objc func primary() -> HSScreen {
+    @objc func primary() -> HSScreen? {
         // NSScreen.screens[0] is always the primary display on macOS.
-        HSScreen(screen: NSScreen.screens[0])
+        guard let primary = NSScreen.screens.first else { return nil }
+        return HSScreen(screen: primary)
     }
 }
