@@ -53,6 +53,7 @@ struct ConsoleView: View {
         switch logType {
         case .Error: return .red
         case .Warning: return .orange
+        case .Autocomplete: return .teal
         default: return .primary
         }
     }
@@ -119,7 +120,7 @@ struct ConsoleView: View {
             return .handled
         }
 
-        guard let result = ConsoleCompletionEngine.complete(input: evalString) else {
+        guard let result = ConsoleCompletionEngine.shared.complete(input: evalString) else {
             return .ignored
         }
 
@@ -135,7 +136,7 @@ struct ConsoleView: View {
         evalString = result.inputPrefix + result.prefix + lcp
         textSelection = nil   // move cursor to end
 
-        AKConsole(result.displayString)
+        AKAutocomplete(result.displayString)
 
         // Enter cycling state so the next Tab cycles through candidates.
         activeCompletion = result
@@ -237,7 +238,7 @@ struct ConsoleView: View {
         .toolbar(id: "console-toolbar") {
             ToolbarItem(id: "minimumLogLevel") {
                 Picker("Minimum log level", selection: $minimumLogLevel) {
-                    ForEach(HammerspoonLogType.allCases) { item in
+                    ForEach(HammerspoonLogType.allCases.dropLast()) { item in
                         Text(item.asString)
                     }
                 }

@@ -22,7 +22,10 @@ import Foundation
 /// - Properties → bare name (e.g. `frame`)
 /// - 0-param methods → `name()` (e.g. `all()`)
 /// - N-param methods → `name(p1, p2, …)` (e.g. `setMode(width, height, scale, frequency)`)
-enum ConsoleCompletionEngine {
+@MainActor final class ConsoleCompletionEngine {
+
+    static let shared = ConsoleCompletionEngine()
+    private init() {}
 
     // MARK: - Result type
 
@@ -61,10 +64,42 @@ enum ConsoleCompletionEngine {
         }
     }
 
+    // MARK: - Startup
+
+    /// Loads api.json on a background thread and stores the result.
+    /// Call once at startup so the first Tab press never blocks the main thread.
+    func prewarm() {
+        Task.detached(priority: .utility) {
+            let data = ConsoleCompletionEngine.loadFromDisk()
+            await MainActor.run { ConsoleCompletionEngine.shared.apiData = data }
+        }
+    }
+
+    /// Reads and parses api.json. `nonisolated` so it may run on any thread.
+    nonisolated private static func loadFromDisk() -> APICompletionData? {
+        if let url = Bundle.main.url(forResource: "api", withExtension: "json") {
+            return APICompletionData(url: url)
+        }
+        // Dev fallback: walk up from the bundle to find docs/api.json in the source tree.
+        var dir = URL(fileURLWithPath: Bundle.main.bundlePath)
+        for _ in 0..<10 {
+            dir = dir.deletingLastPathComponent()
+            let candidate = dir.appendingPathComponent("docs/api.json")
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                return APICompletionData(url: candidate)
+            }
+        }
+        return nil
+    }
+
+    // MARK: - API data
+
+    private var apiData: APICompletionData? = nil
+
     // MARK: - Entry point
 
     /// Returns a `Result` for `input`, or `nil` if no completion can be offered.
-    static func complete(input: String) -> Result? {
+    func complete(input: String) -> Result? {
         guard let dotIdx = input.lastIndex(of: ".") else { return nil }
 
         let stem = String(input[input.index(after: dotIdx)...])
@@ -116,7 +151,7 @@ enum ConsoleCompletionEngine {
     ///
     /// Uses api.json for known modules (authoritative, no prototype noise).
     /// Falls back to JS reflection for dynamic objects (e.g. `hs` itself).
-    private static func completePropertyChain(objectExpr: String, stem: String, inputPrefix: String) -> Result? {
+    private func completePropertyChain(objectExpr: String, stem: String, inputPrefix: String) -> Result? {
         // api.json path — preferred
         if let items = apiData?.moduleItems[objectExpr] {
             let candidates = candidates(from: items, stem: stem)
@@ -148,10 +183,10 @@ enum ConsoleCompletionEngine {
     ///
     /// Looks up the method's return type in api.json, then returns the instance-level
     /// items for that type.  Never evaluates JavaScript.
-    private static func completeAfterCall(calleeExpr: String,
-                                          objectExpr: String,
-                                          stem: String,
-                                          inputPrefix: String) -> Result? {
+    private func completeAfterCall(calleeExpr: String,
+                                   objectExpr: String,
+                                   stem: String,
+                                   inputPrefix: String) -> Result? {
         // calleeExpr: "hs.screen.primary" → split into module + method
         guard let dotIdx = calleeExpr.lastIndex(of: ".") else { return nil }
         let moduleName = String(calleeExpr[calleeExpr.startIndex..<dotIdx])
@@ -168,8 +203,8 @@ enum ConsoleCompletionEngine {
 
     // MARK: - Helpers
 
-    private static func candidates(from items: [APICompletionItem],
-                                   stem: String) -> [Result.Candidate] {
+    private func candidates(from items: [APICompletionItem],
+                            stem: String) -> [Result.Candidate] {
         items
             .filter { stem.isEmpty || $0.name.hasPrefix(stem) }
             .sorted { $0.name < $1.name }
@@ -179,10 +214,9 @@ enum ConsoleCompletionEngine {
     // MARK: - JS reflection
 
     /// Returns the `typeName` property of the evaluated expression, or `nil` if unavailable.
-    /// Used to cross-reference the JS object against api.json instance items for proper formatting.
     /// Returns the name wrapped in a single-element array so JSEngine.eval handles it correctly
     /// (scalar JS return values are not reliably bridged to Swift — arrays always are).
-    private static func reflectedTypeName(of expression: String) -> String? {
+    private func reflectedTypeName(of expression: String) -> String? {
         let js = """
         (function() {
             try {
@@ -201,7 +235,7 @@ enum ConsoleCompletionEngine {
         return first as? String
     }
 
-    private static func reflectedNames(of expression: String) -> [String]? {
+    private func reflectedNames(of expression: String) -> [String]? {
         let js = """
         (function() {
             try {
@@ -231,25 +265,6 @@ enum ConsoleCompletionEngine {
         let names = array.compactMap { $0 as? String }
         return names.isEmpty ? nil : names
     }
-
-    // MARK: - API data
-
-    private static let apiData: APICompletionData? = {
-        // App bundle (release builds)
-        if let url = Bundle.main.url(forResource: "api", withExtension: "json") {
-            return APICompletionData(url: url)
-        }
-        // Dev fallback: walk up from the bundle to find docs/api.json in the source tree
-        var dir = URL(fileURLWithPath: Bundle.main.bundlePath)
-        for _ in 0..<10 {
-            dir = dir.deletingLastPathComponent()
-            let candidate = dir.appendingPathComponent("docs/api.json")
-            if FileManager.default.fileExists(atPath: candidate.path) {
-                return APICompletionData(url: candidate)
-            }
-        }
-        return nil
-    }()
 }
 
 // MARK: - Internal API data model
@@ -266,7 +281,7 @@ private struct APICompletionItem {
     }
 }
 
-private struct APICompletionData {
+private nonisolated struct APICompletionData {
     /// Module-level items keyed by module name (e.g. `"hs.screen"`).
     let moduleItems: [String: [APICompletionItem]]
     /// Instance-level items keyed by Swift type name (e.g. `"HSScreen"`).
@@ -344,7 +359,7 @@ private struct APICompletionData {
 
     /// Strips `?`, `[`, `]` and discards primitive types that aren't our HS types.
     private static func normalizeType(_ type: String) -> String {
-        var t = type
+        let t = type
             .replacingOccurrences(of: "?", with: "")
             .replacingOccurrences(of: "[", with: "")
             .replacingOccurrences(of: "]", with: "")
