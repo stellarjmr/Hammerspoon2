@@ -17,6 +17,10 @@ struct ConsoleView: View {
     @State var evalHistory: [String] = []
     @State var evalIndex: Int = -1
 
+    /// Non-nil while a completion session is active (user keeps pressing Tab).
+    @State var activeCompletion: ConsoleCompletionEngine.Result? = nil
+    @State var completionCycleIndex: Int = 0
+
     @State var searchString: String = ""
     @State var searchPresented: Bool = false
 
@@ -84,6 +88,36 @@ struct ConsoleView: View {
         return .handled
     }
 
+    fileprivate func handleTab() -> KeyPress.Result {
+        if let active = activeCompletion {
+            // Subsequent Tab presses cycle through the candidate list.
+            completionCycleIndex = (completionCycleIndex + 1) % active.candidates.count
+            evalString = active.inputPrefix + active.prefix + active.candidates[completionCycleIndex].completion
+            return .handled
+        }
+
+        guard let result = ConsoleCompletionEngine.complete(input: evalString) else {
+            return .ignored
+        }
+
+        if result.isUnique {
+            evalString = result.inputPrefix + result.prefix + result.candidates[0].completion
+            // No cycling state needed for a unique match.
+            return .handled
+        }
+
+        // Multiple candidates: fill to the longest common prefix and print all options.
+        let lcp = result.longestCommonPrefix
+        evalString = result.inputPrefix + result.prefix + lcp
+
+        AKConsole(result.displayString)
+
+        // Enter cycling state so the next Tab cycles through candidates.
+        activeCompletion = result
+        completionCycleIndex = -1
+        return .handled
+    }
+
     fileprivate func handleSubmit() {
         // Echo the command
         AKInfo("> \(evalString)")
@@ -148,12 +182,25 @@ struct ConsoleView: View {
             TextField(">", text: $evalString, prompt: Text("Javascript: >"))
                 .padding()
                 .onKeyPress(keys: [.upArrow], phases: .up, action: { _ in
+                    activeCompletion = nil
                     return handleUpArrow()
                 })
                 .onKeyPress(keys: [.downArrow], phases: .up, action: { _ in
+                    activeCompletion = nil
                     return handleDownArrow()
                 })
+                .onKeyPress(keys: [.tab], phases: .down, action: { _ in
+                    return handleTab()
+                })
+                .onChange(of: evalString) { _, newValue in
+                    // Any edit that isn't a completion cancels the cycling session.
+                    if let active = activeCompletion,
+                       !active.candidates.contains(where: { active.inputPrefix + active.prefix + $0.completion == newValue }) {
+                        activeCompletion = nil
+                    }
+                }
                 .onSubmit {
+                    activeCompletion = nil
                     handleSubmit()
                 }
         }
