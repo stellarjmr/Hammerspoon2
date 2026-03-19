@@ -121,7 +121,8 @@ struct ConsoleView: View {
         }
 
         guard let result = ConsoleCompletionEngine.shared.complete(input: evalString) else {
-            return .ignored
+            NSSound.beep()
+            return .handled
         }
 
         if result.isUnique {
