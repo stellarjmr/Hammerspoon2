@@ -173,7 +173,10 @@ import Foundation
         guard let names = reflectedNames(of: objectExpr) else { return nil }
         let candidates = names.compactMap { name -> Result.Candidate? in
             guard stem.isEmpty || name.hasPrefix(stem) else { return nil }
-            return Result.Candidate(name: name, completion: name)
+            // If this name is itself a known module, append "." so the user lands
+            // directly in module-completion on the next Tab press.
+            let isModule = apiData?.moduleItems[objectExpr + "." + name] != nil
+            return Result.Candidate(name: name, completion: isModule ? name + "." : name)
         }
         guard !candidates.isEmpty else { return nil }
         return Result(inputPrefix: inputPrefix, prefix: objectExpr + ".", stem: stem, candidates: candidates)
