@@ -100,7 +100,9 @@ import Foundation
 
     /// Returns a `Result` for `input`, or `nil` if no completion can be offered.
     func complete(input: String) -> Result? {
-        guard let dotIdx = input.lastIndex(of: ".") else { return nil }
+        guard let dotIdx = input.lastIndex(of: ".") else {
+            return completeGlobalVariable(input: input)
+        }
 
         let stem = String(input[input.index(after: dotIdx)...])
 
@@ -146,6 +148,29 @@ import Foundation
     }
 
     // MARK: - Completion strategies
+
+    /// Handles bare identifier input with no dot (e.g. `"scr"` → `"screen"`).
+    ///
+    /// Enumerates user-defined globals in the JS context and filters by stem.
+    private func completeGlobalVariable(input: String) -> Result? {
+        let isIdentChar: (Character) -> Bool = { $0.isLetter || $0.isNumber || $0 == "_" }
+        let stem: String
+        let inputPrefix: String
+        if let lastSep = input.lastIndex(where: { !isIdentChar($0) }) {
+            inputPrefix = String(input[...lastSep])
+            stem = String(input[input.index(after: lastSep)...])
+        } else {
+            inputPrefix = ""
+            stem = input
+        }
+        guard let names = reflectedGlobalNames() else { return nil }
+        let candidates = names.compactMap { name -> Result.Candidate? in
+            guard name.range(of: stem, options: [.caseInsensitive, .anchored]) != nil else { return nil }
+            return Result.Candidate(name: name, completion: name)
+        }
+        guard !candidates.isEmpty else { return nil }
+        return Result(inputPrefix: inputPrefix, prefix: "", stem: stem, candidates: candidates)
+    }
 
     /// Handles pure property chains (no `()` in the expression).
     ///
@@ -236,6 +261,30 @@ import Foundation
               let array = raw as? [Any],
               let first = array.first else { return nil }
         return first as? String
+    }
+
+    /// Returns user-defined global variable names from the JS context.
+    private func reflectedGlobalNames() -> [String]? {
+        let js = """
+        (function() {
+            try {
+                var builtins = new Set(['undefined','NaN','Infinity','eval','isFinite','isNaN',
+                    'parseFloat','parseInt','decodeURI','decodeURIComponent','encodeURI',
+                    'encodeURIComponent','Object','Function','Array','String','Number',
+                    'Boolean','Symbol','BigInt','Date','RegExp','Error','EvalError',
+                    'RangeError','ReferenceError','SyntaxError','TypeError','URIError',
+                    'Map','Set','WeakMap','WeakSet','WeakRef','Promise','Proxy','Reflect',
+                    'JSON','Math','Intl','ArrayBuffer','DataView','console','globalThis']);
+                return Object.keys(globalThis).filter(function(n) {
+                    return !builtins.has(n) && n.indexOf('__') !== 0;
+                }).sort();
+            } catch(e) { return []; }
+        })()
+        """
+        guard let raw = JSEngine.shared.eval(js),
+              let array = raw as? [Any] else { return nil }
+        let names = array.compactMap { $0 as? String }
+        return names.isEmpty ? nil : names
     }
 
     private func reflectedNames(of expression: String) -> [String]? {
