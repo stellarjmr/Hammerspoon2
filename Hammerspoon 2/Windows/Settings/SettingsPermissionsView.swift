@@ -24,11 +24,25 @@ struct PermissionRowView: View {
                     .foregroundStyle(.secondary)
             }
             .gridColumnAlignment(.leading)
+            actionButton
+                .gridColumnAlignment(.trailing)
+        }
+    }
+
+    @ViewBuilder
+    private var actionButton: some View {
+        switch state {
+        case .trusted:
+            Button("Request") {}
+                .disabled(true)
+        case .unknown:
             Button("Request") {
                 PermissionsManager.shared.request(permType)
             }
-            .disabled(state == .trusted)
-            .gridColumnAlignment(.trailing)
+        case .notTrusted:
+            Button("Open Settings") {
+                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy")!)
+            }
         }
     }
 
@@ -87,11 +101,14 @@ struct SettingsPermissionsView: View {
     }
 
     private func startObserving() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        guard refreshTimer == nil else { return }
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [self] _ in
             Task { @MainActor in
                 refreshPermissions()
             }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        refreshTimer = timer
     }
 
     private func stopObserving() {

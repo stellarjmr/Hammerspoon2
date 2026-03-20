@@ -56,11 +56,17 @@ class PermissionsManager {
         case .accessibility:
             return AXIsProcessTrusted() ? .trusted : .notTrusted
         case .camera:
-            let status = AVCaptureDevice.authorizationStatus(for: .video)
-            return status == .authorized ? .trusted : .notTrusted
+            switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized:    return .trusted
+            case .notDetermined: return .unknown
+            default:             return .notTrusted
+            }
         case .microphone:
-            let status = AVCaptureDevice.authorizationStatus(for: .audio)
-            return status == .authorized ? .trusted : .notTrusted
+            switch AVCaptureDevice.authorizationStatus(for: .audio) {
+            case .authorized:    return .trusted
+            case .notDetermined: return .unknown
+            default:             return .notTrusted
+            }
         case .screencapture:
             return CGPreflightScreenCaptureAccess() ? .trusted : .notTrusted
         }
