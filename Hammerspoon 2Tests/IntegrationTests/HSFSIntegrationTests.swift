@@ -5,6 +5,7 @@
 
 import Testing
 import Foundation
+import JavaScriptCore
 @testable import Hammerspoon_2
 
 // MARK: - Test-only string helper
@@ -66,6 +67,9 @@ struct HSFSIntegrationTests {
 
         let content = try #require(sut.read(file), "read should return content")
         #expect(content == "Hello, world!")
+
+        let content2 = try #require(sut.read(file, 0, 0), "read should return content")
+        #expect(content2 == "Hello, world!")
     }
 
     @Test("write overwrites existing file content")
@@ -105,7 +109,125 @@ struct HSFSIntegrationTests {
 
     @Test("read returns null for a non-existent file")
     func readMissing() {
-        #expect(sut.read("/nonexistent/path/file.txt") == nil)
+        #expect(sut.read("/nonexistent/path/file.txt", 0, 0) == nil)
+    }
+
+    @Test("read with offset skips leading bytes")
+    func readWithOffset() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("offset.txt")
+        _ = sut.write(file, "Hello, world!")
+
+        // "Hello, " is 7 bytes; reading from offset 7 should give "world!"
+        let result = try #require(sut.read(file, 7, 0))
+        #expect(result == "world!")
+    }
+
+    @Test("read with length limits bytes returned")
+    func readWithLength() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("length.txt")
+        _ = sut.write(file, "Hello, world!")
+
+        let result = try #require(sut.read(file, 0, 5))
+        #expect(result == "Hello")
+    }
+
+    @Test("read with offset and length returns the specified slice")
+    func readWithOffsetAndLength() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("slice.txt")
+        _ = sut.write(file, "Hello, world!")
+
+        // bytes 7–12: "world"
+        let result = try #require(sut.read(file, 7, 5))
+        #expect(result == "world")
+    }
+
+    @Test("readLines delivers all lines to the callback")
+    func readLinesAll() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("lines.txt")
+        _ = sut.write(file, "alpha\nbeta\ngamma\n")
+
+        let ctx = JSContext()!
+        var collected: [String] = []
+        let block: @convention(block) (String) -> Bool = { line in
+            collected.append(line)
+            return true
+        }
+        let callback = JSValue(object: block, in: ctx)!
+
+        let ok = sut.readLines(file, callback)
+        #expect(ok)
+        #expect(collected == ["alpha", "beta", "gamma"])
+    }
+
+    @Test("readLines handles a file with no trailing newline")
+    func readLinesNoTrailingNewline() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("notrail.txt")
+        _ = sut.write(file, "first\nsecond")  // no trailing \n
+
+        let ctx = JSContext()!
+        var collected: [String] = []
+        let block: @convention(block) (String) -> Bool = { line in
+            collected.append(line)
+            return true
+        }
+        let callback = JSValue(object: block, in: ctx)!
+
+        _ = sut.readLines(file, callback)
+        #expect(collected == ["first", "second"])
+    }
+
+    @Test("readLines stops early when callback returns false")
+    func readLinesEarlyStop() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("stop.txt")
+        _ = sut.write(file, "line1\nline2\nline3\n")
+
+        let ctx = JSContext()!
+        var collected: [String] = []
+        let block: @convention(block) (String) -> Bool = { line in
+            collected.append(line)
+            return line != "line1"  // stop after the first line
+        }
+        let callback = JSValue(object: block, in: ctx)!
+
+        let ok = sut.readLines(file, callback)
+        #expect(ok, "readLines should return true even on early stop")
+        #expect(collected == ["line1"])
+    }
+
+    @Test("readLines strips Windows-style CRLF line endings")
+    func readLinesCRLF() throws {
+        let tmp = try TempDir()
+        let file = tmp.child("crlf.txt")
+        // Write raw bytes with \r\n endings.
+        let data = "alpha\r\nbeta\r\ngamma\r\n".data(using: .utf8)!
+        try data.write(to: URL(fileURLWithPath: file))
+
+        let ctx = JSContext()!
+        var collected: [String] = []
+        let block: @convention(block) (String) -> Bool = { line in
+            collected.append(line)
+            return true
+        }
+        let callback = JSValue(object: block, in: ctx)!
+
+        _ = sut.readLines(file, callback)
+        #expect(collected == ["alpha", "beta", "gamma"])
+    }
+
+    @Test("readLines returns false for a non-existent file")
+    func readLinesMissing() throws {
+        let ctx = JSContext()!
+        let block: @convention(block) (String) -> Bool = { _ in true }
+        let callback = JSValue(object: block, in: ctx)!
+
+        let ok = sut.readLines("/nonexistent/\(UUID().uuidString)", callback)
+        #expect(ok == false)
     }
 
     // MARK: - Existence and Type Checks
@@ -175,7 +297,7 @@ struct HSFSIntegrationTests {
         let ok = sut.copy(src, dst)
         #expect(ok, "copy should succeed")
         #expect(sut.exists(src), "source should still exist")
-        #expect(sut.read(dst) == "original")
+        #expect(sut.read(dst, 0, 0) == "original")
     }
 
     @Test("copy fails when the destination already exists")
@@ -198,7 +320,7 @@ struct HSFSIntegrationTests {
         let ok = sut.move(src, dst)
         #expect(ok, "move should succeed")
         #expect(sut.exists(src) == false, "source should be gone")
-        #expect(sut.read(dst) == "content")
+        #expect(sut.read(dst, 0, 0) == "content")
     }
 
     @Test("delete removes a file")
@@ -491,7 +613,7 @@ struct HSFSIntegrationTests {
         let ok = sut.symlink(target, link)
         #expect(ok, "symlink should succeed")
         #expect(sut.isSymlink(link))
-        #expect(sut.read(link) == "target content", "reading through symlink should give target content")
+        #expect(sut.read(link, 0, 0) == "target content", "reading through symlink should give target content")
     }
 
     @Test("readlink returns the raw symlink target without resolving it")
@@ -632,7 +754,7 @@ struct HSFSIntegrationTests {
         switch method {
         case "read":
             // /etc/hosts is a real file on every macOS system.
-            let result = sut.read("/etc/hosts")
+            let result = sut.read("/etc/hosts", 0, 0)
             #expect(result != nil, "read on /etc/hosts should succeed")
         case "write":
             let tmp  = try TempDir()
