@@ -23,7 +23,13 @@ import Darwin          // POSIX stat/lstat/rmdir
 /// ## Reading and writing files
 ///
 /// ```javascript
-/// const contents = hs.fs.read("/etc/hosts");
+/// const contents = hs.fs.read("/etc/hosts");           // entire file
+/// const chunk    = hs.fs.read("/etc/hosts", 100, 50);  // 50 bytes from offset 100
+///
+/// hs.fs.readLines("/etc/hosts", function(line) {
+///     console.log(line);
+///     return true; // return false to stop early
+/// });
 ///
 /// hs.fs.write("/tmp/hello.txt", "Hello, world!\n");
 /// hs.fs.append("/tmp/hello.txt", "More content\n");
@@ -58,11 +64,41 @@ import Darwin          // POSIX stat/lstat/rmdir
 
     // MARK: - File I/O
 
-    /// Read the entire contents of a file as a UTF-8 string.
+    /// Read part or all of a file as a UTF-8 string.
     ///
-    /// - Parameter path: Path to the file. `~` is expanded.
-    /// - Returns: The file contents, or `null` if the file cannot be read.
-    @objc func read(_ path: String) -> String?
+    /// ```javascript
+    /// const all   = hs.fs.read("/etc/hosts");          // entire file
+    /// const chunk = hs.fs.read("/etc/hosts", 100, 50); // 50 bytes starting at byte 100
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - offset: Byte offset to start reading from. Pass `0` (or omit) to read from the beginning.
+    ///   - length: Maximum number of bytes to read. Pass `0` (or omit) to read to the end of the file.
+    /// - Returns: The file contents as a UTF-8 string, or `null` if the file cannot be read.
+    @objc func read(_ path: String, _ offset: Int, _ length: Int) -> String?
+
+    /// Read a file line-by-line, invoking a callback for each line.
+    ///
+    /// Lines are delivered with newline characters stripped. Both `\n` and `\r\n`
+    /// line endings are handled. The file is read in chunks so it is never fully
+    /// loaded into memory, making this safe for arbitrarily large files.
+    ///
+    /// ```javascript
+    /// hs.fs.readLines("/etc/hosts", function(line) {
+    ///     if (line.startsWith("#")) return true; // skip comment lines, keep going
+    ///     console.log(line);
+    ///     return true; // return false to stop early
+    /// });
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - path: Path to the file. `~` is expanded.
+    ///   - callback: Called once per line with the line text. Return `true` to continue
+    ///     reading, or `false` to stop early.
+    /// - Returns: `true` if the file was read successfully (including early stops requested
+    ///   by the callback), or `false` if the file could not be opened.
+    @objc func readLines(_ path: String, _ callback: JSValue) -> Bool
 
     /// Write a UTF-8 string to a file, creating it or overwriting any existing content.
     ///
@@ -409,13 +445,58 @@ import Darwin          // POSIX stat/lstat/rmdir
 
     // MARK: - File I/O
 
-    @objc func read(_ path: String) -> String? {
-        do {
-            return try String(contentsOfFile: expand(path), encoding: .utf8)
-        } catch {
-            AKError("hs.fs.read: \(error.localizedDescription)")
+    @objc func read(_ path: String, _ offset: Int = 0, _ length: Int = 0) -> String? {
+        guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
+            AKError("hs.fs.read: could not open \(path)")
             return nil
         }
+        defer { handle.closeFile() }
+
+        if offset > 0 { handle.seek(toFileOffset: UInt64(offset)) }
+        let data = length > 0 ? handle.readData(ofLength: length) : handle.readDataToEndOfFile()
+
+        guard let result = String(data: data, encoding: .utf8) else {
+            AKError("hs.fs.read: \(path) is not valid UTF-8")
+            return nil
+        }
+        return result
+    }
+
+    @objc func readLines(_ path: String, _ callback: JSValue) -> Bool {
+        guard let handle = FileHandle(forReadingAtPath: expand(path)) else {
+            AKError("hs.fs.readLines: could not open \(path)")
+            return false
+        }
+        defer { handle.closeFile() }
+
+        var pending = Data()
+        let bufferSize = 65_536
+
+        while true {
+            let chunk = handle.readData(ofLength: bufferSize)
+            let isEOF = chunk.isEmpty
+            if !isEOF { pending.append(chunk) }
+
+            // Flush all complete lines from the pending buffer.
+            while let nlIdx = pending.firstIndex(of: 0x0A) {
+                // Strip a preceding \r for Windows-style line endings.
+                let lineEnd = nlIdx > 0 && pending[nlIdx - 1] == 0x0D ? nlIdx - 1 : nlIdx
+                let line = String(data: pending[..<lineEnd], encoding: .utf8) ?? ""
+                let keepGoing = callback.call(withArguments: [line])?.toBool() ?? false
+                pending = Data(pending[(nlIdx + 1)...])
+                if !keepGoing { return true }
+            }
+
+            if isEOF { break }
+        }
+
+        // Deliver any final line that has no trailing newline.
+        if !pending.isEmpty {
+            let line = String(data: pending, encoding: .utf8) ?? ""
+            _ = callback.call(withArguments: [line])
+        }
+
+        return true
     }
 
     @objc func write(_ path: String, _ content: String, _ atomically: Bool = true) -> Bool {
