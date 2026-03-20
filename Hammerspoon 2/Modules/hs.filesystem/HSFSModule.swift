@@ -672,7 +672,7 @@ import Darwin          // POSIX stat/lstat/rmdir
     }
 
     @objc func urlFromPath(_ path: String) -> String {
-        URL(filePath: path, directoryHint: .checkFileSystem).absoluteString
+        URL(filePath: expand(path), directoryHint: .checkFileSystem).absoluteString
     }
 
     // MARK: - File Attributes
