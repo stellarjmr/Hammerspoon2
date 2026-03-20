@@ -1281,8 +1281,8 @@
         {
           "name": "readLines",
           "signature": "func readLines(_ path: String, _ callback: JSValue) -> Bool",
-          "rawDocumentation": "Read a file line-by-line, invoking a callback for each line.\n\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n`\nline endings are handled. The file is read in chunks so it is never fully\nloaded into memory, making this safe for arbitrarily large files.\n\n```javascript\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    if (line.startsWith(\"#\")) return true; // skip comment lines, keep going\n    console.log(line);\n    return true; // return false to stop early\n});\n```\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - callback: Called once per line with the line text. Return `true` to continue\n    reading, or `false` to stop early.\n- Returns: `true` if the file was read successfully (including early stops requested\n  by the callback), or `false` if the file could not be opened.",
-          "description": "Read a file line-by-line, invoking a callback for each line.\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n`\nline endings are handled. The file is read in chunks so it is never fully\nloaded into memory, making this safe for arbitrarily large files.\n```javascript\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    if (line.startsWith(\"#\")) return true; // skip comment lines, keep going\n    console.log(line);\n    return true; // return false to stop early\n});\n```\nreading, or `false` to stop early.",
+          "rawDocumentation": "Read a file line-by-line, invoking a callback for each line.\n\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.\n\n```javascript\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    if (line.startsWith(\"#\")) return true; // skip comment lines, keep going\n    console.log(line);\n    return true; // return false to stop early\n});\n```\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - callback: Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.\n- Returns: `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.",
+          "description": "Read a file line-by-line, invoking a callback for each line.\nLines are delivered with newline characters stripped. Both `\\n` and `\\r\\n` line endings are handled.\n```javascript\nhs.fs.readLines(\"/etc/hosts\", function(line) {\n    if (line.startsWith(\"#\")) return true; // skip comment lines, keep going\n    console.log(line);\n    return true; // return false to stop early\n});\n```",
           "params": [
             {
               "name": "path",
@@ -1292,21 +1292,21 @@
             {
               "name": "callback",
               "type": "JSValue",
-              "description": "Called once per line with the line text. Return `true` to continue"
+              "description": "Called once per line with the line text. Return `true` to continue reading, or `false` to stop early."
             }
           ],
           "returns": {
             "type": "Bool",
-            "description": "`true` if the file was read successfully (including early stops requested"
+            "description": "`true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened."
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 101
+          "lineNumber": 97
         },
         {
           "name": "write",
-          "signature": "func write(_ path: String, _ content: String, _ atomically: Bool) -> Bool",
-          "rawDocumentation": "Write a UTF-8 string to a file, creating it or overwriting any existing content.\n\nIntermediate directories are not created automatically; use `mkdir` first if needed.\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - content: String to write.\n  - atomically: Whether to write the file in-place or atomically\n- Returns: `true` on success, `false` on failure.",
+          "signature": "func write(_ path: String, _ content: String, _ inPlace: Bool) -> Bool",
+          "rawDocumentation": "Write a UTF-8 string to a file, creating it or overwriting any existing content.\n\nIntermediate directories are not created automatically; use `mkdir` first if needed.\n\n- Parameters:\n  - path: Path to the file. `~` is expanded.\n  - content: String to write.\n  - inPlace: Whether to write the file in-place or atomically. Defaults to atomically\n- Returns: `true` on success, `false` on failure.",
           "description": "Write a UTF-8 string to a file, creating it or overwriting any existing content.\nIntermediate directories are not created automatically; use `mkdir` first if needed.",
           "params": [
             {
@@ -1320,9 +1320,9 @@
               "description": "String to write."
             },
             {
-              "name": "atomically",
+              "name": "inPlace",
               "type": "Bool",
-              "description": "Whether to write the file in-place or atomically"
+              "description": "Whether to write the file in-place or atomically. Defaults to atomically"
             }
           ],
           "returns": {
@@ -1331,7 +1331,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 112
+          "lineNumber": 108
         },
         {
           "name": "append",
@@ -1356,7 +1356,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 120
+          "lineNumber": 116
         },
         {
           "name": "exists",
@@ -1376,7 +1376,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 129
+          "lineNumber": 125
         },
         {
           "name": "isFile",
@@ -1396,7 +1396,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 136
+          "lineNumber": 132
         },
         {
           "name": "isDirectory",
@@ -1416,7 +1416,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 143
+          "lineNumber": 139
         },
         {
           "name": "isSymlink",
@@ -1436,7 +1436,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 149
+          "lineNumber": 145
         },
         {
           "name": "isReadable",
@@ -1456,7 +1456,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 155
+          "lineNumber": 151
         },
         {
           "name": "isWritable",
@@ -1476,7 +1476,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 161
+          "lineNumber": 157
         },
         {
           "name": "copy",
@@ -1501,7 +1501,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 174
+          "lineNumber": 170
         },
         {
           "name": "move",
@@ -1526,7 +1526,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 184
+          "lineNumber": 180
         },
         {
           "name": "delete",
@@ -1546,7 +1546,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 193
+          "lineNumber": 189
         },
         {
           "name": "list",
@@ -1566,7 +1566,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 204
+          "lineNumber": 200
         },
         {
           "name": "listRecursive",
@@ -1586,7 +1586,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 212
+          "lineNumber": 208
         },
         {
           "name": "mkdir",
@@ -1606,7 +1606,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 220
+          "lineNumber": 216
         },
         {
           "name": "rmdir",
@@ -1626,7 +1626,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 229
+          "lineNumber": 225
         },
         {
           "name": "currentDir",
@@ -1640,7 +1640,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 236
+          "lineNumber": 232
         },
         {
           "name": "chdir",
@@ -1660,7 +1660,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 242
+          "lineNumber": 238
         },
         {
           "name": "pathToAbsolute",
@@ -1680,7 +1680,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 253
+          "lineNumber": 249
         },
         {
           "name": "displayName",
@@ -1700,7 +1700,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 262
+          "lineNumber": 258
         },
         {
           "name": "temporaryDirectory",
@@ -1714,7 +1714,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 267
+          "lineNumber": 263
         },
         {
           "name": "homeDirectory",
@@ -1728,12 +1728,12 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 272
+          "lineNumber": 268
         },
         {
           "name": "urlFromPath",
-          "signature": "func urlFromPath(_ path: String) -> String?",
-          "rawDocumentation": "Returns a `file://` URL string for the given path.\n\n```javascript\nhs.fs.urlFromPath(\"/tmp/foo.txt\")\n// → \"file:///tmp/foo.txt\"\n```\n\n- Parameter path: Filesystem path. `~` is expanded.\n- Returns: URL string, or `null` on failure.",
+          "signature": "func urlFromPath(_ path: String) -> String",
+          "rawDocumentation": "Returns a `file://` URL string for the given path.\n\n```javascript\nhs.fs.urlFromPath(\"/tmp/foo.txt\")\n// → \"file:///tmp/foo.txt\"\n```\n\n- Parameter path: Filesystem path. `~` is expanded.\n- Returns: URL string",
           "description": "Returns a `file://` URL string for the given path.\n```javascript\nhs.fs.urlFromPath(\"/tmp/foo.txt\")\n// → \"file:///tmp/foo.txt\"\n```",
           "params": [
             {
@@ -1743,18 +1743,18 @@
             }
           ],
           "returns": {
-            "type": "String?",
-            "description": "URL string, or `null` on failure."
+            "type": "String",
+            "description": "URL string"
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 283
+          "lineNumber": 279
         },
         {
           "name": "attributes",
           "signature": "func attributes(_ path: String) -> NSDictionary?",
-          "rawDocumentation": "Get metadata attributes for a file or directory.\n\nFollows symbolic links (reports the target's attributes, not the link's).\nUse `isSymlink` to detect links before calling this if needed.\n\nReturns an object with:\n- `size` — Size in bytes (`number`).\n- `type` — One of `\"file\"`, `\"directory\"`, `\"symlink\"`, `\"socket\"`,\n           `\"characterSpecial\"`, `\"blockSpecial\"`, or `\"unknown\"`.\n- `permissions` — POSIX permission bits as an integer (e.g. `0o644` = `420`).\n- `ownerID` — Owner UID.\n- `groupID` — Owner GID.\n- `inode` — Inode number. Two paths with the same inode on the same device are hard links to the same file.\n- `creationDate` — Creation date as seconds since the Unix epoch.\n- `modificationDate` — Last modification date as seconds since the Unix epoch.\n\n- Parameter path: Path to inspect. `~` is expanded.\n- Returns: Attributes object, or `null` if the path cannot be accessed.",
-          "description": "Get metadata attributes for a file or directory.\nFollows symbolic links (reports the target's attributes, not the link's).\nUse `isSymlink` to detect links before calling this if needed.\n`\"characterSpecial\"`, `\"blockSpecial\"`, or `\"unknown\"`.",
+          "rawDocumentation": "Get metadata attributes for a file or directory.\n\nDoes not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.\n\nReturns an object with:\n- `size` — Size in bytes (`number`).\n- `type` — One of `\"file\"`, `\"directory\"`, `\"symlink\"`, `\"socket\"`, `\"characterSpecial\"`, `\"blockSpecial\"`, or `\"unknown\"`.\n- `permissions` — POSIX permission bits as an integer (e.g. `0o644` = `420`).\n- `ownerID` — Owner UID.\n- `groupID` — Owner GID.\n- `inode` — Inode number.\n- `creationDate` — Creation date as seconds since the Unix epoch.\n- `modificationDate` — Last modification date as seconds since the Unix epoch.\n\n- Parameter path: Path to inspect. `~` is expanded.\n- Returns: Attributes object, or `null` if the path cannot be accessed.",
+          "description": "Get metadata attributes for a file or directory.\nDoes not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.",
           "params": [
             {
               "name": "path",
@@ -1768,7 +1768,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 305
+          "lineNumber": 299
         },
         {
           "name": "touch",
@@ -1788,7 +1788,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 313
+          "lineNumber": 307
         },
         {
           "name": "link",
@@ -1813,7 +1813,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 325
+          "lineNumber": 319
         },
         {
           "name": "symlink",
@@ -1838,7 +1838,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 336
+          "lineNumber": 330
         },
         {
           "name": "readlink",
@@ -1858,7 +1858,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 342
+          "lineNumber": 336
         },
         {
           "name": "tags",
@@ -1878,7 +1878,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 350
+          "lineNumber": 344
         },
         {
           "name": "setTags",
@@ -1903,7 +1903,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 358
+          "lineNumber": 352
         },
         {
           "name": "addTags",
@@ -1928,7 +1928,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 366
+          "lineNumber": 360
         },
         {
           "name": "removeTags",
@@ -1953,7 +1953,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 376
+          "lineNumber": 370
         },
         {
           "name": "fileUTI",
@@ -1973,7 +1973,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 389
+          "lineNumber": 383
         },
         {
           "name": "pathToBookmark",
@@ -1993,7 +1993,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 400
+          "lineNumber": 394
         },
         {
           "name": "pathFromBookmark",
@@ -2013,7 +2013,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 406
+          "lineNumber": 400
         }
       ],
       "properties": [],
@@ -6563,5 +6563,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-20T22:11:05.362Z"
+  "generatedAt": "2026-03-20T23:06:22.532Z"
 }
