@@ -38,15 +38,15 @@ enum PermissionsType: Int, CaseIterable {
     var permissionDescription: String {
         switch self {
         case .accessibility:
-            return "Allows Hammerspoon to control and monitor other applications via the Accessibility APIs."
+            return "Allows controlling and monitoring other applications"
         case .camera:
-            return "Allows Hammerspoon scripts to access the camera."
+            return "Allows accessing the camera"
         case .microphone:
-            return "Allows Hammerspoon scripts to access the microphone."
+            return "Allows accessing the microphone"
         case .screencapture:
-            return "Allows Hammerspoon to capture screen content for automation and scripting."
+            return "Allows capturing screen content"
         case .location:
-            return "Allows Hammerspoon scripts to access the device's location."
+            return "Allows accessing this computer's location"
         }
     }
 
