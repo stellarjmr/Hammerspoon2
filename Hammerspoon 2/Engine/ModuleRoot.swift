@@ -19,6 +19,7 @@ import JavaScriptCoreExtras
     @objc var application: HSApplicationModule { get }
     @objc var ax: HSAXModule { get }
     @objc var console: HSConsoleModule { get }
+    @objc var fs: HSFSModule { get }
     @objc var hashing: HSHashModule { get }
     @objc var hotkey: HSHotkeyModule { get }
     @objc var permissions: HSPermissionsModule { get }
@@ -75,6 +76,7 @@ import JavaScriptCoreExtras
     @objc var application: HSApplicationModule { get { getOrCreate(name: "application", type: HSApplicationModule.self)}}
     @objc var ax: HSAXModule { get { getOrCreate(name: "ax", type: HSAXModule.self)}}
     @objc var console: HSConsoleModule { get { getOrCreate(name: "console", type: HSConsoleModule.self)}}
+    @objc var fs: HSFSModule { get { getOrCreate(name: "fs", type: HSFSModule.self)}}
     @objc var hashing: HSHashModule { get { getOrCreate(name: "hashing", type: HSHashModule.self)}}
     @objc var hotkey: HSHotkeyModule { get { getOrCreate(name: "hotkey", type: HSHotkeyModule.self)}}
     @objc var permissions: HSPermissionsModule { get { getOrCreate(name: "permissions", type: HSPermissionsModule.self)}}
