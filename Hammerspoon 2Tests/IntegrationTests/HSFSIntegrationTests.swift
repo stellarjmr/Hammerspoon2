@@ -440,7 +440,7 @@ struct HSFSIntegrationTests {
         let tmp = try TempDir()
         let ok = sut.chdir(tmp.path)
         #expect(ok, "chdir should succeed")
-        #expect(sut.currentDir()?.deletingPrefix("/private") == tmp.path)
+        #expect(sut.currentDir()?.deletingPrefix("/private") == tmp.path.deletingPrefix("/private"))
     }
 
     @Test("chdir returns false for a non-existent path")
@@ -593,8 +593,6 @@ struct HSFSIntegrationTests {
         let srcIno  = (sut.attributes(src)?["inode"]  as? Int) // use ino via stat directly
         let hardIno = (sut.attributes(hard)?["inode"] as? Int)
 
-        print("Comparing file/link: \(src), \(hard)")
-        print("Found inodes: \(String(describing: srcIno)), \(String(describing: hardIno))")
         #expect(srcIno != nil && hardIno != nil, "inode numbers should not be nil")
         #expect(srcIno == hardIno, "hard link should point to the same file")
 
@@ -729,7 +727,7 @@ struct HSFSIntegrationTests {
 
         let resolved = try #require(sut.pathFromBookmark(bookmark)?.deletingPrefix("/private"),
                                     "pathFromBookmark should resolve back to a path")
-        #expect(resolved == file)
+        #expect(resolved == file.deletingPrefix("/private"))
     }
 
     @Test("pathFromBookmark returns null for invalid base64")

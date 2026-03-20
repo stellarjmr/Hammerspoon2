@@ -107,9 +107,9 @@ import Darwin          // POSIX stat/lstat/rmdir
     /// - Parameters:
     ///   - path: Path to the file. `~` is expanded.
     ///   - content: String to write.
-    ///   - atomically: Whether to write the file in-place or atomically
+    ///   - inPlace: Whether to write the file in-place or atomically. Defaults to atomically
     /// - Returns: `true` on success, `false` on failure.
-    @objc func write(_ path: String, _ content: String, _ atomically: Bool) -> Bool
+    @objc func write(_ path: String, _ content: String, _ inPlace: Bool) -> Bool
 
     /// Append a UTF-8 string to a file, creating it if it does not exist.
     ///
@@ -497,9 +497,9 @@ import Darwin          // POSIX stat/lstat/rmdir
         return true
     }
 
-    @objc func write(_ path: String, _ content: String, _ atomically: Bool = true) -> Bool {
+    @objc func write(_ path: String, _ content: String, _ inPlace: Bool) -> Bool {
         do {
-            try content.write(toFile: expand(path), atomically: atomically, encoding: .utf8)
+            try content.write(toFile: expand(path), atomically: !inPlace, encoding: .utf8)
             return true
         } catch {
             AKError("hs.fs.write: \(error.localizedDescription)")
