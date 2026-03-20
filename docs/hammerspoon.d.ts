@@ -990,9 +990,7 @@ const chunk = hs.fs.read("/etc/hosts", 100, 50); // 50 bytes starting at byte 10
 
     /**
      * Read a file line-by-line, invoking a callback for each line.
-Lines are delivered with newline characters stripped. Both `\n` and `\r\n`
-line endings are handled. The file is read in chunks so it is never fully
-loaded into memory, making this safe for arbitrarily large files.
+Lines are delivered with newline characters stripped. Both `\n` and `\r\n` line endings are handled.
 ```javascript
 hs.fs.readLines("/etc/hosts", function(line) {
     if (line.startsWith("#")) return true; // skip comment lines, keep going
@@ -1000,10 +998,9 @@ hs.fs.readLines("/etc/hosts", function(line) {
     return true; // return false to stop early
 });
 ```
-reading, or `false` to stop early.
      * @param path Path to the file. `~` is expanded.
-     * @param callback Called once per line with the line text. Return `true` to continue
-     * @returns `true` if the file was read successfully (including early stops requested
+     * @param callback Called once per line with the line text. Return `true` to continue reading, or `false` to stop early.
+     * @returns `true` if the file was read successfully (including early stops requested by the callback), or `false` if the file could not be opened.
      */
     function readLines(path: string, callback: JSValue): boolean;
 
@@ -1012,10 +1009,10 @@ reading, or `false` to stop early.
 Intermediate directories are not created automatically; use `mkdir` first if needed.
      * @param path Path to the file. `~` is expanded.
      * @param content String to write.
-     * @param atomically Whether to write the file in-place or atomically
+     * @param inPlace Whether to write the file in-place or atomically. Defaults to atomically
      * @returns `true` on success, `false` on failure.
      */
-    function write(path: string, content: string, atomically: boolean): boolean;
+    function write(path: string, content: string, inPlace: boolean): boolean;
 
     /**
      * Append a UTF-8 string to a file, creating it if it does not exist.
@@ -1182,15 +1179,13 @@ hs.fs.urlFromPath("/tmp/foo.txt")
 // → "file:///tmp/foo.txt"
 ```
      * @param path Filesystem path. `~` is expanded.
-     * @returns URL string, or `null` on failure.
+     * @returns URL string
      */
-    function urlFromPath(path: string): string | undefined;
+    function urlFromPath(path: string): string;
 
     /**
      * Get metadata attributes for a file or directory.
-Follows symbolic links (reports the target's attributes, not the link's).
-Use `isSymlink` to detect links before calling this if needed.
-`"characterSpecial"`, `"blockSpecial"`, or `"unknown"`.
+Does not follow symbolic links. Use `isSymlink` to detect links before calling this if needed.
      * @param path Path to inspect. `~` is expanded.
      * @returns Attributes object, or `null` if the path cannot be accessed.
      */
