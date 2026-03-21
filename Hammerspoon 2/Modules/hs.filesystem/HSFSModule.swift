@@ -344,22 +344,25 @@ import Darwin          // POSIX stat/lstat/rmdir
     @objc func tags(_ path: String) -> [String]?
 
     /// Replace all Finder tags on a file or directory.
+    /// This function is only available on macOS Tahoe (26) or later.
     ///
     /// - Parameters:
     ///   - path: Path to the file or directory. `~` is expanded.
     ///   - newTags: Array of tag name strings.
     /// - Returns: `true` on success, `false` on failure.
-    @objc func setTags(_ path: String, _ newTags: NSArray) -> Bool
+    @objc @available(macOS 26.0, *) func setTags(_ path: String, _ newTags: NSArray) -> Bool
 
     /// Add Finder tags to a file or directory (union with existing tags).
+    /// This function is only available on macOS Tahoe (26) or later.
     ///
     /// - Parameters:
     ///   - path: Path to the file or directory. `~` is expanded.
     ///   - newTags: Array of tag name strings to add.
     /// - Returns: `true` on success, `false` on failure.
-    @objc func addTags(_ path: String, _ newTags: NSArray) -> Bool
+    @objc @available(macOS 26.0, *) func addTags(_ path: String, _ newTags: NSArray) -> Bool
 
     /// Remove specific Finder tags from a file or directory.
+    /// This function is only available on macOS Tahoe (26) or later.
     ///
     /// Tags not currently present are silently ignored.
     ///
@@ -367,7 +370,7 @@ import Darwin          // POSIX stat/lstat/rmdir
     ///   - path: Path to the file or directory. `~` is expanded.
     ///   - tagsToRemove: Array of tag name strings to remove.
     /// - Returns: `true` on success, `false` on failure.
-    @objc func removeTags(_ path: String, _ tagsToRemove: NSArray) -> Bool
+    @objc @available(macOS 26.0, *) func removeTags(_ path: String, _ tagsToRemove: NSArray) -> Bool
 
     // MARK: - Uniform Type Identifiers
 
@@ -764,7 +767,8 @@ import Darwin          // POSIX stat/lstat/rmdir
         }
     }
 
-    @objc func setTags(_ path: String, _ newTags: NSArray) -> Bool {
+    @objc @available(macOS 26.0, *)
+    func setTags(_ path: String, _ newTags: NSArray) -> Bool {
         let tagList = newTags.compactMap { $0 as? String }
         do {
             var values = URLResourceValues()
@@ -778,13 +782,13 @@ import Darwin          // POSIX stat/lstat/rmdir
         }
     }
 
-    @objc func addTags(_ path: String, _ newTags: NSArray) -> Bool {
+    @objc @available(macOS 26.0, *) func addTags(_ path: String, _ newTags: NSArray) -> Bool {
         let existing = Set(tags(path) ?? [])
         let toAdd    = Set(newTags.compactMap { $0 as? String })
         return setTags(path, Array(existing.union(toAdd)).sorted() as NSArray)
     }
 
-    @objc func removeTags(_ path: String, _ tagsToRemove: NSArray) -> Bool {
+    @objc @available(macOS 26.0, *) func removeTags(_ path: String, _ tagsToRemove: NSArray) -> Bool {
         let existing = Set(tags(path) ?? [])
         let toRemove = Set(tagsToRemove.compactMap { $0 as? String })
         return setTags(path, Array(existing.subtracting(toRemove)).sorted() as NSArray)
