@@ -826,7 +826,7 @@ import JavaScriptCore
 
         harness.eval("""
         hs.task.builder('/bin/pwd')
-            .inDirectory('/private/tmp')
+            .inDirectory('/tmp')
             .run()
             .then(function(result) {
                 onResolve(result.stdout);
