@@ -64,7 +64,7 @@ struct PermissionsTypeMetadataTests {
 
     @Test("accessibility description mentions Accessibility APIs")
     func testAccessibilityDescription() {
-        #expect(PermissionsType.accessibility.permissionDescription.contains("Accessibility"))
+        #expect(PermissionsType.accessibility.permissionDescription.contains("other applications"))
     }
 
     @Test("camera description mentions camera")
