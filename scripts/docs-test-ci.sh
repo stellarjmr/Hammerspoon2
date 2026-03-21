@@ -12,6 +12,7 @@ cd "${REPO_ROOT}"
 
 # Capture output while also printing it
 OUTPUT_FILE=$(mktemp)
+trap 'rm -f "${OUTPUT_FILE}"' EXIT
 set +e
 bash "${SCRIPT_DIR}/test-docs.sh" 2>&1 | tee "${OUTPUT_FILE}"
 EXIT_CODE=${PIPESTATUS[0]}
