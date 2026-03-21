@@ -168,12 +168,12 @@ extension PermissionsManager: CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         guard status != .notDetermined else { return }
         let granted = status == .authorized || status == .authorizedAlways
-        let callback = MainActor.assumeIsolated { [self] in
-            let cb = locationCallback
-            locationCallback = nil
-            locationManager = nil
-            return cb
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let callback = self.locationCallback
+            self.locationCallback = nil
+            self.locationManager = nil
+            callback?(granted)
         }
-        callback?(granted)
     }
 }

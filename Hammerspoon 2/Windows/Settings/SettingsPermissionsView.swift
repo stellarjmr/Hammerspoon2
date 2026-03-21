@@ -66,8 +66,15 @@ struct PermissionRowView: View {
 struct SettingsPermissionsView: View {
     @State private var permissionStates: [PermissionsType: PermissionsState] = [:]
     @State private var refreshTimer: Timer?
+    @State private var isRefreshing = true
 
     var body: some View {
+        ProgressView()
+            .progressViewStyle(.circular)
+            .frame(height: 12.0)
+            .opacity(isRefreshing ? 1.0 : 0.0)
+            .padding([.top])
+
         HStack {
             Spacer()
             VStack {
@@ -102,9 +109,10 @@ struct SettingsPermissionsView: View {
 
     private func startObserving() {
         guard refreshTimer == nil else { return }
-        let timer = Timer(timeInterval: 1.0, repeats: true) { [self] _ in
+        let timer = Timer(timeInterval: 5.0, repeats: true) { [self] _ in
             Task { @MainActor in
                 refreshPermissions()
+                isRefreshing = false
             }
         }
         RunLoop.main.add(timer, forMode: .common)
