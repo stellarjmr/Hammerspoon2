@@ -46,14 +46,14 @@ import JavaScriptCoreExtras
 // MARK: - Implementation
 
 // Actor to safely track active tasks across threads
-private actor TaskTracker {
+struct TaskTracker {
     private var activeTasks = Set<ObjectIdentifier>()
 
-    func register(_ task: HSTask) {
+    mutating func register(_ task: HSTask) {
         activeTasks.insert(ObjectIdentifier(task))
     }
 
-    func unregister(_ task: HSTask) {
+    mutating func unregister(_ task: HSTask) {
         activeTasks.remove(ObjectIdentifier(task))
     }
 
@@ -61,12 +61,13 @@ private actor TaskTracker {
         return activeTasks.count
     }
 
-    func clear() {
+    mutating func clear() {
         activeTasks.removeAll()
     }
 }
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSTaskModule: NSObject, HSModuleAPI, HSTaskModuleAPI {
     var name = "hs.task"
 
@@ -84,7 +85,7 @@ private actor TaskTracker {
     @objc var TaskBuilder: JSValue? = nil
 
     // Track active tasks for testing purposes (thread-safe via actor)
-    private let taskTracker = TaskTracker()
+    private var taskTracker = TaskTracker()
 
     // MARK: - Module lifecycle
     override required init() { super.init() }
@@ -92,13 +93,10 @@ private actor TaskTracker {
     func shutdown() {
         // Terminate all running tasks that still exist
         for task in tasks.allObjects.filter({ $0.isRunning }) {
+            taskTracker.unregister(task)
             task._shutdown()
         }
         tasks.removeAllObjects()
-
-        Task {
-            await taskTracker.clear()
-        }
     }
 
     deinit {
@@ -108,15 +106,11 @@ private actor TaskTracker {
     // MARK: - Task Tracking (for testing)
 
     func registerActiveTask(_ task: HSTask) {
-        Task {
-            await taskTracker.register(task)
-        }
+        taskTracker.register(task)
     }
 
     func unregisterActiveTask(_ task: HSTask) {
-        Task {
-            await taskTracker.unregister(task)
-        }
+        taskTracker.unregister(task)
     }
 
     @MainActor
@@ -124,7 +118,7 @@ private actor TaskTracker {
         let deadline = Date().addingTimeInterval(timeout)
 
         while Date() < deadline {
-            let count = await taskTracker.count()
+            let count = taskTracker.count()
 
             if count == 0 {
                 return true

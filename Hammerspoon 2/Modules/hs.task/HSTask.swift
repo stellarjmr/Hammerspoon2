@@ -69,6 +69,7 @@ import JavaScriptCoreExtras
 }
 
 @_documentation(visibility: private)
+@MainActor
 @objc class HSTask: NSObject, HSTaskAPI {
     @objc var typeName = "HSTask"
 

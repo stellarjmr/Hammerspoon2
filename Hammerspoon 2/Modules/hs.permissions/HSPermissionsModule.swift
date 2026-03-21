@@ -88,10 +88,8 @@ import AVFoundation
     @objc func requestCamera() -> JSPromise? {
         return JSEngine.shared.createPromise { holder in
             PermissionsManager.shared.request(.camera) { result in
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated {
-                        holder.resolveWith(result)
-                    }
+                Task { @MainActor in
+                    holder.resolveWith(result)
                 }
             }
         }
@@ -106,10 +104,8 @@ import AVFoundation
     @objc func requestMicrophone() -> JSPromise? {
         return JSEngine.shared.createPromise { holder in
             PermissionsManager.shared.request(.microphone) { result in
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated {
-                        holder.resolveWith(result)
-                    }
+                Task { @MainActor in
+                    holder.resolveWith(result)
                 }
             }
         }

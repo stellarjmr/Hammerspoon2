@@ -69,14 +69,15 @@ import Foundation
     /// Loads api.json on a background thread and stores the result.
     /// Call once at startup so the first Tab press never blocks the main thread.
     func prewarm() {
-        Task.detached(priority: .utility) {
-            let data = ConsoleCompletionEngine.loadFromDisk()
+        Task {
+            let data = await ConsoleCompletionEngine.loadFromDisk()
             await MainActor.run { ConsoleCompletionEngine.shared.apiData = data }
         }
     }
 
-    /// Reads and parses api.json. `nonisolated` so it may run on any thread.
-    nonisolated private static func loadFromDisk() -> APICompletionData? {
+    /// Reads and parses api.json. `@concurrent nonisolated` so it may run on any thread.
+    @concurrent
+    nonisolated private static func loadFromDisk() async -> APICompletionData? {
         if let url = Bundle.main.url(forResource: "api", withExtension: "json") {
             return APICompletionData(url: url)
         }

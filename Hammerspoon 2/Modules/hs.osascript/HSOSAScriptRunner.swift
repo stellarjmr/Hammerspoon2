@@ -39,8 +39,6 @@ class HSOSAScriptRunner {
         try session.activate()
 
         return try await withCheckedThrowingContinuation { continuation in
-            defer { session.cancel(reason: "OSAScriptRunner deinit") }
-
             let message = HSOSARequest(language: language, source: source)
 
             do {
@@ -63,9 +61,11 @@ class HSOSAScriptRunner {
                     }
 
                     continuation.resume(returning: (success, resultJSON, raw))
+                    session.cancel(reason: "OSAScriptRunner deinit")
                 }
             } catch {
                 continuation.resume(throwing: error)
+                session.cancel(reason: "OSAScriptRunner deinit")
             }
         }
     }
