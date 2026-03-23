@@ -233,11 +233,8 @@ class HotkeyManager {
         hotkeys.removeValue(forKey: hotkeyID)
     }
 
-    nonisolated private func dispatch(hotkeyID: UInt32, eventKind: UInt32) {
-        // Dispatch on main thread to access hotkeys dictionary and trigger callback
-        Task { @MainActor in
-            self.hotkeys[hotkeyID]?.trigger(eventKind: eventKind)
-        }
+    private func dispatch(hotkeyID: UInt32, eventKind: UInt32) {
+        self.hotkeys[hotkeyID]?.trigger(eventKind: eventKind)
     }
 }
 
