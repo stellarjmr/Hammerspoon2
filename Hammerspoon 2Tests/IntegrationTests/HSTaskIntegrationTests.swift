@@ -685,9 +685,10 @@ import JavaScriptCore
         var count = 0
         harness.registerCallback("onResolve") { (_: String) in
             count += 1
-            if count == 3 {
+            if count >= 3 {
                 promiseResolved = true
             }
+            print("COUNT: \(count) (\(promiseResolved))")
         }
 
         harness.eval("""
