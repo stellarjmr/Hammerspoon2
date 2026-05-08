@@ -660,11 +660,13 @@ if (usb) usb.setDefaultOutputDevice();
 ```
 ## Watching for system-level changes
 ```javascript
-hs.audiodevice.setWatcherCallback(function(event) {
+var fn = function(event) {
     if (event === "dOut") console.log("Default output changed");
     if (event === "dev+") console.log("A device was added");
-});
-hs.audiodevice.startWatcher();
+};
+hs.audiodevice.addWatcher(fn);
+// later…
+hs.audiodevice.removeWatcher(fn);
 ```
  */
 declare namespace hs.audiodevice {
@@ -719,26 +721,21 @@ declare namespace hs.audiodevice {
     function findDeviceByUID(uid: string): HSAudioDevice | undefined;
 
     /**
-     * Set the callback invoked when the system audio configuration changes.
-     * @param callback A JavaScript function that receives an event name string
+     * Register a listener for all system-level audio configuration events.
+     * @param listener A JavaScript function that receives the event name string
      */
-    function setWatcherCallback(callback: JSValue): void;
+    function addWatcher(listener: JSValue): void;
 
     /**
-     * Start the system-level audio hardware watcher.
+     * Remove a previously registered system-level listener.
+     * @param listener The JavaScript function that was passed to ``addWatcher(_:)``
      */
-    function startWatcher(): void;
+    function removeWatcher(listener: JSValue): void;
 
     /**
-     * Stop the system-level audio hardware watcher.
+     * SKIP_DOCS
      */
-    function stopWatcher(): void;
-
-    /**
-     * Whether the system-level watcher is currently running.
-     * @returns `true` if the watcher is active
-     */
-    function watcherIsActive(): boolean;
+    function _makeDeviceEmitter(): void;
 
 }
 
@@ -757,10 +754,10 @@ if (dev) {
 ```javascript
 const dev = hs.audiodevice.defaultOutputDevice();
 if (dev) {
-    dev.setWatcherCallback(function(event) {
-        console.log("Device event:", event);
-    });
-    dev.startWatcher();
+    var fn = function(event) { console.log("Device event:", event); };
+    dev.addWatcher(fn);
+    // later…
+    dev.removeWatcher(fn);
 }
 ```
  */
@@ -822,26 +819,16 @@ declare class HSAudioDevice {
     static setDefaultEffectDevice(): boolean;
 
     /**
-     * Set the callback invoked when a property of this device changes.
-     * @param callback A JavaScript function that receives an event name string
+     * Register a listener for a per-device property-change event.
+     * @param listener A JavaScript function that receives an event name string
      */
-    static setWatcherCallback(callback: JSValue): void;
+    static addWatcher(listener: JSValue): void;
 
     /**
-     * Start watching this device for property changes.
+     * Remove a previously registered per-device listener.
+     * @param listener The JavaScript function that was passed to ``addWatcher(_:)``
      */
-    static startWatcher(): void;
-
-    /**
-     * Stop watching this device for property changes.
-     */
-    static stopWatcher(): void;
-
-    /**
-     * Whether the per-device watcher is currently active.
-     * @returns `true` if the watcher is running
-     */
-    static watcherIsActive(): boolean;
+    static removeWatcher(listener: JSValue): void;
 
     /**
      * The CoreAudio object ID of this device.

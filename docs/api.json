@@ -598,7 +598,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 41
+          "lineNumber": 43
         },
         {
           "name": "allOutputDevices",
@@ -612,7 +612,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 45
+          "lineNumber": 47
         },
         {
           "name": "allInputDevices",
@@ -626,7 +626,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 49
+          "lineNumber": 51
         },
         {
           "name": "defaultOutputDevice",
@@ -640,7 +640,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 53
+          "lineNumber": 55
         },
         {
           "name": "defaultInputDevice",
@@ -654,7 +654,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 57
+          "lineNumber": 59
         },
         {
           "name": "defaultEffectDevice",
@@ -668,7 +668,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 61
+          "lineNumber": 63
         },
         {
           "name": "findDeviceByName",
@@ -688,7 +688,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 66
+          "lineNumber": 68
         },
         {
           "name": "findDeviceByUID",
@@ -708,60 +708,52 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 71
+          "lineNumber": 73
         },
         {
-          "name": "setWatcherCallback",
-          "signature": "func setWatcherCallback(_ callback: JSValue)",
-          "rawDocumentation": "Set the callback invoked when the system audio configuration changes.\n\nThe callback receives one of these event strings:\n- `\"dOut\"` — the default output device changed\n- `\"dIn\"` — the default input device changed\n- `\"dSErr\"` — the default alert sound device changed\n- `\"dev+\"` — an audio device was added\n- `\"dev-\"` — an audio device was removed\n\n- Parameter callback: A JavaScript function that receives an event name string",
-          "description": "Set the callback invoked when the system audio configuration changes.",
+          "name": "addWatcher",
+          "signature": "func addWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Register a listener for all system-level audio configuration events.\n\nThe listener receives one of the following event name strings:\n- `\"dOut\"` — the default output device changed\n- `\"dIn\"` — the default input device changed\n- `\"dSErr\"` — the default alert sound device changed\n- `\"dev+\"` — an audio device was added\n- `\"dev-\"` — an audio device was removed\n\n- Parameter listener: A JavaScript function that receives the event name string",
+          "description": "Register a listener for all system-level audio configuration events.",
           "params": [
             {
-              "name": "callback",
+              "name": "listener",
               "type": "JSValue",
-              "description": "A JavaScript function that receives an event name string"
+              "description": "A JavaScript function that receives the event name string"
             }
           ],
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 83
+          "lineNumber": 85
         },
         {
-          "name": "startWatcher",
-          "signature": "func startWatcher()",
-          "rawDocumentation": "Start the system-level audio hardware watcher.",
-          "description": "Start the system-level audio hardware watcher.",
-          "params": [],
+          "name": "removeWatcher",
+          "signature": "func removeWatcher(_ listener: JSValue)",
+          "rawDocumentation": "Remove a previously registered system-level listener.\n\n- Parameter listener: The JavaScript function that was passed to ``addWatcher(_:)``",
+          "description": "Remove a previously registered system-level listener.",
+          "params": [
+            {
+              "name": "listener",
+              "type": "JSValue",
+              "description": "The JavaScript function that was passed to ``addWatcher(_:)``"
+            }
+          ],
           "returns": null,
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 86
+          "lineNumber": 90
         },
         {
-          "name": "stopWatcher",
-          "signature": "func stopWatcher()",
-          "rawDocumentation": "Stop the system-level audio hardware watcher.",
-          "description": "Stop the system-level audio hardware watcher.",
+          "name": "_makeDeviceEmitter",
+          "rawDocumentation": "SKIP_DOCS",
+          "description": "SKIP_DOCS",
           "params": [],
           "returns": null,
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 89
-        },
-        {
-          "name": "watcherIsActive",
-          "signature": "func watcherIsActive() -> Bool",
-          "rawDocumentation": "Whether the system-level watcher is currently running.\n- Returns: `true` if the watcher is active",
-          "description": "Whether the system-level watcher is currently running.",
-          "params": [],
-          "returns": {
-            "type": "Bool",
-            "description": "`true` if the watcher is active"
-          },
-          "source": "swift",
-          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDeviceModule.swift",
-          "lineNumber": 93
+          "source": "javascript",
+          "filePath": "Hammerspoon 2/Modules/hs.audiodevice/hs.audiodevice.js",
+          "lineNumber": 108,
+          "type": "function"
         }
       ],
       "properties": [],
@@ -769,8 +761,8 @@
         {
           "name": "HSAudioDeviceAPI",
           "type": "typedef",
-          "rawDocumentation": "An audio device attached to the system.\n\nObtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.\n\n## Getting and setting volume\n\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    console.log(dev.volume);    // 0.0 – 1.0, or null\n    dev.volume = 0.5;\n}\n```\n\n## Watching for changes\n\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    dev.setWatcherCallback(function(event) {\n        console.log(\"Device event:\", event);\n    });\n    dev.startWatcher();\n}\n```",
-          "description": "An audio device attached to the system.\nObtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.\n## Getting and setting volume\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    console.log(dev.volume);    // 0.0 – 1.0, or null\n    dev.volume = 0.5;\n}\n```\n## Watching for changes\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    dev.setWatcherCallback(function(event) {\n        console.log(\"Device event:\", event);\n    });\n    dev.startWatcher();\n}\n```",
+          "rawDocumentation": "An audio device attached to the system.\n\nObtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.\n\n## Getting and setting volume\n\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    console.log(dev.volume);    // 0.0 – 1.0, or null\n    dev.volume = 0.5;\n}\n```\n\n## Watching for changes\n\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    var fn = function(event) { console.log(\"Device event:\", event); };\n    dev.addWatcher(fn);\n    // later…\n    dev.removeWatcher(fn);\n}\n```",
+          "description": "An audio device attached to the system.\nObtain instances via ``hs.audiodevice`` module methods — do not instantiate directly.\n## Getting and setting volume\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    console.log(dev.volume);    // 0.0 – 1.0, or null\n    dev.volume = 0.5;\n}\n```\n## Watching for changes\n```javascript\nconst dev = hs.audiodevice.defaultOutputDevice();\nif (dev) {\n    var fn = function(event) { console.log(\"Device event:\", event); };\n    dev.addWatcher(fn);\n    // later…\n    dev.removeWatcher(fn);\n}\n```",
           "methods": [
             {
               "name": "currentOutputDataSource",
@@ -911,13 +903,13 @@
               "lineNumber": 305
             },
             {
-              "name": "setWatcherCallback",
-              "signature": "func setWatcherCallback(_ callback: JSValue)",
-              "rawDocumentation": "Set the callback invoked when a property of this device changes.\n\nThe callback receives one of these event strings:\n- `\"vmout\"` — output volume changed\n- `\"vmin\"` — input volume changed\n- `\"mout\"` — output mute state changed\n- `\"min\"` — input mute state changed\n- `\"rate\"` — sample rate changed\n- `\"dsout\"` — output data source changed\n- `\"dsin\"` — input data source changed\n\n- Parameter callback: A JavaScript function that receives an event name string",
-              "description": "Set the callback invoked when a property of this device changes.",
+              "name": "addWatcher",
+              "signature": "func addWatcher(_ listener: JSValue)",
+              "rawDocumentation": "Register a listener for a per-device property-change event.\n\nThe callback receives one of these event strings:\n- `\"vmout\"` — output volume changed\n- `\"vmin\"` — input volume changed\n- `\"mout\"` — output mute state changed\n- `\"min\"` — input mute state changed\n- `\"rate\"` — sample rate changed\n- `\"dsout\"` — output data source changed\n- `\"dsin\"` — input data source changed\n\n- Parameter listener: A JavaScript function that receives an event name string",
+              "description": "Register a listener for a per-device property-change event.",
               "params": [
                 {
-                  "name": "callback",
+                  "name": "listener",
                   "type": "JSValue",
                   "description": "A JavaScript function that receives an event name string"
                 }
@@ -928,40 +920,21 @@
               "lineNumber": 321
             },
             {
-              "name": "startWatcher",
-              "signature": "func startWatcher()",
-              "rawDocumentation": "Start watching this device for property changes.",
-              "description": "Start watching this device for property changes.",
-              "params": [],
+              "name": "removeWatcher",
+              "signature": "func removeWatcher(_ listener: JSValue)",
+              "rawDocumentation": "Remove a previously registered per-device listener.\n\n- Parameter listener: The JavaScript function that was passed to ``addWatcher(_:)``",
+              "description": "Remove a previously registered per-device listener.",
+              "params": [
+                {
+                  "name": "listener",
+                  "type": "JSValue",
+                  "description": "The JavaScript function that was passed to ``addWatcher(_:)``"
+                }
+              ],
               "returns": null,
               "source": "swift",
               "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
-              "lineNumber": 324
-            },
-            {
-              "name": "stopWatcher",
-              "signature": "func stopWatcher()",
-              "rawDocumentation": "Stop watching this device for property changes.",
-              "description": "Stop watching this device for property changes.",
-              "params": [],
-              "returns": null,
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
-              "lineNumber": 327
-            },
-            {
-              "name": "watcherIsActive",
-              "signature": "func watcherIsActive() -> Bool",
-              "rawDocumentation": "Whether the per-device watcher is currently active.\n- Returns: `true` if the watcher is running",
-              "description": "Whether the per-device watcher is currently active.",
-              "params": [],
-              "returns": {
-                "type": "Bool",
-                "description": "`true` if the watcher is running"
-              },
-              "source": "swift",
-              "filePath": "Hammerspoon 2/Modules/hs.audiodevice/HSAudioDevice.swift",
-              "lineNumber": 331
+              "lineNumber": 326
             }
           ],
           "properties": [
@@ -1103,8 +1076,8 @@
           ]
         }
       ],
-      "description": "Module for discovering and controlling audio devices.\n## Finding devices\n```javascript\nconst all = hs.audiodevice.all();\nconst out = hs.audiodevice.defaultOutputDevice();\nconst mic = hs.audiodevice.defaultInputDevice();\n```\n## Selecting a device\n```javascript\nconst usb = hs.audiodevice.findDeviceByName(\"USB Audio CODEC\");\nif (usb) usb.setDefaultOutputDevice();\n```\n## Watching for system-level changes\n```javascript\nhs.audiodevice.setWatcherCallback(function(event) {\n    if (event === \"dOut\") console.log(\"Default output changed\");\n    if (event === \"dev+\") console.log(\"A device was added\");\n});\nhs.audiodevice.startWatcher();\n```",
-      "rawDocumentation": "Module for discovering and controlling audio devices.\n\n## Finding devices\n\n```javascript\nconst all = hs.audiodevice.all();\nconst out = hs.audiodevice.defaultOutputDevice();\nconst mic = hs.audiodevice.defaultInputDevice();\n```\n\n## Selecting a device\n\n```javascript\nconst usb = hs.audiodevice.findDeviceByName(\"USB Audio CODEC\");\nif (usb) usb.setDefaultOutputDevice();\n```\n\n## Watching for system-level changes\n\n```javascript\nhs.audiodevice.setWatcherCallback(function(event) {\n    if (event === \"dOut\") console.log(\"Default output changed\");\n    if (event === \"dev+\") console.log(\"A device was added\");\n});\nhs.audiodevice.startWatcher();\n```"
+      "description": "Module for discovering and controlling audio devices.\n## Finding devices\n```javascript\nconst all = hs.audiodevice.all();\nconst out = hs.audiodevice.defaultOutputDevice();\nconst mic = hs.audiodevice.defaultInputDevice();\n```\n## Selecting a device\n```javascript\nconst usb = hs.audiodevice.findDeviceByName(\"USB Audio CODEC\");\nif (usb) usb.setDefaultOutputDevice();\n```\n## Watching for system-level changes\n```javascript\nvar fn = function(event) {\n    if (event === \"dOut\") console.log(\"Default output changed\");\n    if (event === \"dev+\") console.log(\"A device was added\");\n};\nhs.audiodevice.addWatcher(fn);\n// later…\nhs.audiodevice.removeWatcher(fn);\n```",
+      "rawDocumentation": "Module for discovering and controlling audio devices.\n\n## Finding devices\n\n```javascript\nconst all = hs.audiodevice.all();\nconst out = hs.audiodevice.defaultOutputDevice();\nconst mic = hs.audiodevice.defaultInputDevice();\n```\n\n## Selecting a device\n\n```javascript\nconst usb = hs.audiodevice.findDeviceByName(\"USB Audio CODEC\");\nif (usb) usb.setDefaultOutputDevice();\n```\n\n## Watching for system-level changes\n\n```javascript\nvar fn = function(event) {\n    if (event === \"dOut\") console.log(\"Default output changed\");\n    if (event === \"dev+\") console.log(\"A device was added\");\n};\nhs.audiodevice.addWatcher(fn);\n// later…\nhs.audiodevice.removeWatcher(fn);\n```"
     },
     {
       "name": "hs.ax",
@@ -1799,7 +1772,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 79
+          "lineNumber": 80
         },
         {
           "name": "readLines",
@@ -1824,7 +1797,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 97
+          "lineNumber": 98
         },
         {
           "name": "write",
@@ -1854,7 +1827,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 108
+          "lineNumber": 109
         },
         {
           "name": "append",
@@ -1879,7 +1852,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 116
+          "lineNumber": 117
         },
         {
           "name": "exists",
@@ -1899,7 +1872,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 125
+          "lineNumber": 126
         },
         {
           "name": "isFile",
@@ -1919,7 +1892,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 132
+          "lineNumber": 133
         },
         {
           "name": "isDirectory",
@@ -1939,7 +1912,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 139
+          "lineNumber": 140
         },
         {
           "name": "isSymlink",
@@ -1959,7 +1932,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 145
+          "lineNumber": 146
         },
         {
           "name": "isReadable",
@@ -1979,7 +1952,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 151
+          "lineNumber": 152
         },
         {
           "name": "isWritable",
@@ -1999,7 +1972,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 157
+          "lineNumber": 158
         },
         {
           "name": "copy",
@@ -2024,7 +1997,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 170
+          "lineNumber": 171
         },
         {
           "name": "move",
@@ -2049,7 +2022,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 180
+          "lineNumber": 181
         },
         {
           "name": "delete",
@@ -2069,7 +2042,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 189
+          "lineNumber": 190
         },
         {
           "name": "list",
@@ -2089,7 +2062,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 200
+          "lineNumber": 201
         },
         {
           "name": "listRecursive",
@@ -2109,7 +2082,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 208
+          "lineNumber": 209
         },
         {
           "name": "mkdir",
@@ -2129,7 +2102,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 216
+          "lineNumber": 217
         },
         {
           "name": "rmdir",
@@ -2149,7 +2122,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 225
+          "lineNumber": 226
         },
         {
           "name": "currentDir",
@@ -2163,7 +2136,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 232
+          "lineNumber": 233
         },
         {
           "name": "chdir",
@@ -2183,7 +2156,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 238
+          "lineNumber": 239
         },
         {
           "name": "pathToAbsolute",
@@ -2203,7 +2176,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 249
+          "lineNumber": 250
         },
         {
           "name": "displayName",
@@ -2223,7 +2196,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 258
+          "lineNumber": 259
         },
         {
           "name": "temporaryDirectory",
@@ -2237,7 +2210,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 263
+          "lineNumber": 264
         },
         {
           "name": "homeDirectory",
@@ -2251,7 +2224,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 268
+          "lineNumber": 269
         },
         {
           "name": "urlFromPath",
@@ -2271,7 +2244,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 279
+          "lineNumber": 280
         },
         {
           "name": "attributes",
@@ -2291,7 +2264,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 299
+          "lineNumber": 300
         },
         {
           "name": "touch",
@@ -2311,7 +2284,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 307
+          "lineNumber": 308
         },
         {
           "name": "link",
@@ -2336,7 +2309,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 319
+          "lineNumber": 320
         },
         {
           "name": "symlink",
@@ -2361,7 +2334,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 330
+          "lineNumber": 331
         },
         {
           "name": "readlink",
@@ -2381,7 +2354,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 336
+          "lineNumber": 337
         },
         {
           "name": "tags",
@@ -2401,7 +2374,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 344
+          "lineNumber": 345
         },
         {
           "name": "fileUTI",
@@ -2421,7 +2394,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 386
+          "lineNumber": 387
         },
         {
           "name": "pathToBookmark",
@@ -2441,7 +2414,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 397
+          "lineNumber": 398
         },
         {
           "name": "pathFromBookmark",
@@ -2461,7 +2434,7 @@
           },
           "source": "swift",
           "filePath": "Hammerspoon 2/Modules/hs.filesystem/HSFSModule.swift",
-          "lineNumber": 403
+          "lineNumber": 404
         }
       ],
       "properties": [],
@@ -7011,5 +6984,5 @@
       "category": "type"
     }
   ],
-  "generatedAt": "2026-03-24T22:32:32.598Z"
+  "generatedAt": "2026-05-08T15:14:53.160Z"
 }

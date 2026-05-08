@@ -104,6 +104,7 @@ class AudioDeviceWatcherEmitter {
 hs.audiodevice._watcherEmitter = new AudioDeviceModuleWatcherEmitter();
 
 // Factory for per-device emitters; called lazily from Swift when the first watcher is registered on a device.
+/// SKIP_DOCS
 hs.audiodevice._makeDeviceEmitter = function(device) {
     return new AudioDeviceWatcherEmitter(device);
 };
