@@ -128,7 +128,7 @@ import AXSwift
     }
 
     @objc var value: Any? {
-        return try? element.attribute(.value)
+        return attributeValue(UIElement.Attribute.value.rawValue)
     }
 
     @objc var elementDescription: String? {
