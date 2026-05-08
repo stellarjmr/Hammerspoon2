@@ -327,6 +327,42 @@ struct HSAudioDeviceIntegrationTests {
 
     // MARK: - Per-device watcher
 
+    @Test("device watcher fires vmout event when output volume changes")
+    @MainActor
+    func testDeviceWatcherFiresOnVolumeChange() async throws {
+        let harness = makeHarness()
+
+        // Obtain the device at the Swift level so we can use defer for safe cleanup.
+        let module = HSAudioDeviceModule()
+        guard let dev = module.defaultOutputDevice(), dev.isOutput,
+              let originalVolume = dev.volume else {
+            #expect(Bool(false), "Unable to fetch default output device")
+            return
+        }
+
+        defer { dev.volume = originalVolume }
+
+        let nudged = NSNumber(value: originalVolume.doubleValue > 0.5
+            ? originalVolume.doubleValue - 0.05
+            : originalVolume.doubleValue + 0.05)
+
+        harness.eval("""
+            var _devWatchEvents = [];
+            var _volDev = hs.audiodevice.defaultOutputDevice();
+            _volDev.setWatcherCallback(function(e) { _devWatchEvents.push(e); });
+            _volDev.startWatcher();
+        """)
+        // Declare defer after _volDev is created so the symbol is always defined when defer runs.
+        defer { harness.eval("_volDev.stopWatcher();") }
+
+        dev.volume = nudged
+
+        // Suspend the main actor so the main-queue CoreAudio notification can fire.
+        try await Task.sleep(for: .milliseconds(500))
+
+        harness.expectTrue("_devWatchEvents.indexOf('vmout') !== -1")
+    }
+
     @Test("device watcherIsActive() starts false, becomes true after startWatcher()")
     func testDeviceWatcherActiveState() {
         let harness = makeHarness()
@@ -349,6 +385,72 @@ struct HSAudioDeviceIntegrationTests {
             safeDev.stopWatcher();
         """)
         harness.expectFalse("safeDev.watcherIsActive()")
+    }
+
+    // MARK: - System watcher callbacks
+
+    @Test("system watcher fires dOut event when default output device changes")
+    @MainActor
+    func testSystemWatcherFiresOnDefaultOutputChange() async throws {
+        let harness = makeHarness()
+
+        let module = HSAudioDeviceModule()
+        let outputs = module.allOutputDevices()
+        guard outputs.count >= 2, let originalDefault = module.defaultOutputDevice() else {
+            try? Test.cancel("Insufficient output devices to run test")
+            return
+        }
+        guard let altDevice = outputs.first(where: { $0.uid != originalDefault.uid }) else {
+            #expect(Bool(false), "Unable to identify alternate output audio device")
+            return
+        }
+
+        defer { _ = originalDefault.setDefaultOutputDevice() }
+
+        harness.eval("""
+            var _sysOutEvents = [];
+            hs.audiodevice.setWatcherCallback(function(e) { _sysOutEvents.push(e); });
+            hs.audiodevice.startWatcher();
+        """)
+        defer { harness.eval("hs.audiodevice.stopWatcher();") }
+
+        _ = altDevice.setDefaultOutputDevice()
+
+        try await Task.sleep(for: .milliseconds(500))
+
+        harness.expectTrue("_sysOutEvents.indexOf('dOut') !== -1")
+    }
+
+    @Test("system watcher fires dIn event when default input device changes")
+    @MainActor
+    func testSystemWatcherFiresOnDefaultInputChange() async throws {
+        let harness = makeHarness()
+
+        let module = HSAudioDeviceModule()
+        let inputs = module.allInputDevices()
+        guard inputs.count >= 2, let originalDefault = module.defaultInputDevice() else {
+            try? Test.cancel("Insufficient input devices to run test")
+            return
+        }
+        guard let altDevice = inputs.first(where: { $0.uid != originalDefault.uid }) else {
+            #expect(Bool(false), "Unable to identify alternate input audio device")
+            return
+        }
+
+        defer { _ = originalDefault.setDefaultInputDevice() }
+
+        harness.eval("""
+            var _sysInEvents = [];
+            hs.audiodevice.setWatcherCallback(function(e) { _sysInEvents.push(e); });
+            hs.audiodevice.startWatcher();
+        """)
+        defer { harness.eval("hs.audiodevice.stopWatcher();") }
+
+        _ = altDevice.setDefaultInputDevice()
+
+        try await Task.sleep(for: .milliseconds(500))
+
+        harness.expectTrue("_sysInEvents.indexOf('dIn') !== -1")
     }
 
     // MARK: - Default device setters (smoke tests only — no mutation)
