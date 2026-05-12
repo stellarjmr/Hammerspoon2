@@ -128,7 +128,7 @@ import AXSwift
     }
 
     @objc var value: Any? {
-        return try? element.attribute(.value)
+        return attributeValue(UIElement.Attribute.value.rawValue)
     }
 
     @objc var elementDescription: String? {
@@ -254,14 +254,18 @@ import AXSwift
 
     @objc func attributeValue(_ attribute: String) -> Any? {
         let attr = UIElement.Attribute(rawValue: attribute)
-        return try? element.getMultipleAttributes([attr]).first?.value
+        guard let rawValue = try? element.getMultipleAttributes([attr]).first?.value else {
+            return nil
+        }
+
+        return bridgeValue(rawValue)
     }
 
     @objc func setAttributeValue(_ attribute: String, value: Any) -> Bool {
         let attr = UIElement.Attribute(rawValue: attribute)
 
         do {
-            try element.setAttribute(attr, value: value)
+            try element.setAttribute(attr, value: unbridgeValue(value))
             return true
         } catch {
             AKError("Failed to set attribute \(attribute): \(error.localizedDescription)")
@@ -308,5 +312,55 @@ import AXSwift
     @objc var pid: Int {
         let pid = try? Int(element.pid())
         return pid ?? -1
+    }
+
+    private func bridgeValue(_ value: Any) -> Any {
+        if let uiElement = value as? UIElement {
+            return HSAXElement(element: uiElement)
+        }
+        if let elements = value as? [UIElement] {
+            return elements.map { HSAXElement(element: $0) }
+        }
+        if let point = value as? CGPoint {
+            return point.toBridge()
+        }
+        if let size = value as? CGSize {
+            return size.toBridge()
+        }
+        if let rect = value as? CGRect {
+            return rect.toBridge()
+        }
+        if let values = value as? [Any] {
+            return values.map { bridgeValue($0) }
+        }
+        if let dict = value as? [String: Any] {
+            return dict.mapValues { bridgeValue($0) }
+        }
+        return value
+    }
+
+    private func unbridgeValue(_ value: Any) -> Any {
+        if let element = value as? HSAXElement {
+            return element.element
+        }
+        if let elements = value as? [HSAXElement] {
+            return elements.map { $0.element }
+        }
+        if let point = value as? HSPoint {
+            return point.point
+        }
+        if let size = value as? HSSize {
+            return size.size
+        }
+        if let rect = value as? HSRect {
+            return rect.rect
+        }
+        if let values = value as? [Any] {
+            return values.map { unbridgeValue($0) }
+        }
+        if let dict = value as? [String: Any] {
+            return dict.mapValues { unbridgeValue($0) }
+        }
+        return value
     }
 }
